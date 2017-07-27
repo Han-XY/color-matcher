@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.mygdx.colormatcher.ColorMatcher;
+import com.mygdx.colormatcher.game.ColorMatcher;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override

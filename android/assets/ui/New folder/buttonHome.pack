@@ -1,0 +1,35 @@
+
+buttonHome.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+buttonHome.down
+  rotate: false
+  xy: 0, 0
+  size: 128, 128
+  split: 2, 2, 2, 3
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+buttonHome.up
+  rotate: false
+  xy: 0, 0
+  size: 128, 128
+  split: 3, 2, 3, 3
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+buttonHomedown
+  rotate: false
+  xy: 0, 0
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+buttonHomeup
+  rotate: false
+  xy: 0, 0
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
