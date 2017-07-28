@@ -74,7 +74,7 @@ public class Play extends State{
 	/* For queuing object addition/removal */
 	private Queue<GameObject> objectsToAdd;
 	private Queue<GameObject> objectsToRemove;
-	private final int OBJECT_CREATION_COOLDOWN = 5;
+	private final int OBJECT_CREATION_COOLDOWN = 3;
 
 	/* UI */
 	private Label score;

@@ -1,23 +1,24 @@
 {
 "problems": [
 	{
-		"question": "d/dx sin(x)",
+		"question": "1 + 3",
 		"answers": [
-			"cos(x)",
-			"-cos(x)",
-			"-sin(x)"
+			"4",
+			"1",
+			"6"
 		]
 	},
 	{
-		"question": "d/dx cos(x)",
+		"question": "4 + 6",
 		"answers": [
-			"-sin(x)",
-			"sin(x)",
-			"-cos(x)"
+			"10",
+			"14",
+			"17"
 		]
 	}
 ],
+"score": 1,
 "highScore": 20,
-"timer": 24,
+"timer": 1,
 "gameEnded": true
 }
