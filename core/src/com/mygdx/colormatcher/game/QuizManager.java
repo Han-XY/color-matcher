@@ -6,7 +6,6 @@ import com.mygdx.colormatcher.gameobject.AnswerBall;
 import com.mygdx.colormatcher.gameobject.Ball;
 import com.mygdx.colormatcher.gameobject.QuestionBall;
 import com.mygdx.colormatcher.gameobject.RedBall;
-import com.mygdx.colormatcher.screens.Play;
 
 public class QuizManager {
 	private Problem[] problems;
@@ -17,7 +16,7 @@ public class QuizManager {
 	
 	private boolean gameEnded;
 
-	private ColorMatcher colorMatcher;
+	private transient ColorMatcher colorMatcher;
 
 	public void setPlay(ColorMatcher colorMatcher) {
 		this.colorMatcher = colorMatcher;

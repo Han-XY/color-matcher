@@ -116,7 +116,7 @@ public abstract class Ball extends GameObject{
 		
 		bitmapFont.draw(batch, label, referenceUnitPosition.x - scaledWidth / 2, referenceUnitPosition.y + scaledHeight / 2);
 		
-		batch.setProjectionMatrix(Play.gameCamera.combined);
+		batch.setProjectionMatrix(this.colorMatcher.getPlayState().getGameCamera().combined);
 		
 		bitmapFont.getData().setScale(1f);
 	}

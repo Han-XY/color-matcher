@@ -45,9 +45,11 @@ import com.mygdx.colormatcher.game.QuizManager;
 import com.mygdx.colormatcher.gameobject.*;
 import com.mygdx.colormatcher.tween.ActorAccessor;
 
+
+/** The game-state for actual gameplay. **/
 public class Play extends State{
 
-	public static OrthographicCamera gameCamera;
+	private OrthographicCamera gameCamera;
 
 	public static Viewport gameViewport;
 	public static Viewport pixelViewport;
@@ -279,14 +281,7 @@ public class Play extends State{
 		gameViewport.update(width, height);
 		pixelViewport.update(width, height);
 	}
-	
-	private void setCamera() {
-	//	if(viewport == null) return;
-	//
-	//	gameCamera.setToOrtho(false, width, height);
-	//
-	//	gameCamera.position.set(width / 2, height / 2, 0);
-	}
+
 	
 	private void retry(){
 		gameRestarting = true;
@@ -318,9 +313,7 @@ public class Play extends State{
 		}
 		
 		wallFixtures.clear();
-		
-		float scale = getScale();
-		
+
 		glyphLayout.setText(this.colorMatcher.getFontWhite(), "game over");
 		gameOverMessage = new Label("game over", skin);
 		gameOverMessage.setFontScale(.5f);
@@ -452,7 +445,7 @@ public class Play extends State{
 		if(gameEnded)
 			return;
 
-		Vector2 touchedPosition = Play.screenCoordinatesToWorld(new Vector2(x, y));
+		Vector2 touchedPosition = this.screenCoordinatesToWorld(new Vector2(x, y));
 
 		for(int i = 0; i < balls.size(); i ++){
 			Ball ball = balls.get(i);
@@ -492,8 +485,8 @@ public class Play extends State{
 	 * @param screenCoordinates The screen coordinates.
 	 * @return The world coordinates.
 	 */
-	public static Vector2 screenCoordinatesToWorld(Vector2 screenCoordinates) {
-		Vector3 unprojectedCoordinates = gameCamera.unproject(
+	public Vector2 screenCoordinatesToWorld(Vector2 screenCoordinates) {
+		Vector3 unprojectedCoordinates = this.gameCamera.unproject(
 				new Vector3(screenCoordinates.x, screenCoordinates.y, 0f),
 				gameViewport.getScreenX(), gameViewport.getScreenY(), gameViewport.getScreenWidth(),
 				gameViewport.getScreenHeight()
@@ -519,8 +512,11 @@ public class Play extends State{
 		}
 		return null;
 	}
-	
-	
+
+	public OrthographicCamera getGameCamera() {
+		return this.gameCamera;
+	}
+
 	public Vector2 getReferenceUnitPosition(Fixture fixture, boolean centre){
 		Body body = fixture.getBody();
 		Shape shape = fixture.getShape();
