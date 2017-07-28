@@ -2,6 +2,8 @@ package com.mygdx.colormatcher.screens;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import aurelienribon.tweenengine.Timeline;
 import aurelienribon.tweenengine.Tween;
@@ -13,13 +15,11 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -49,41 +49,48 @@ import com.mygdx.colormatcher.tween.ActorAccessor;
 /** The game-state for actual gameplay. **/
 public class Play extends State{
 
+	/* These are used for the game-world, and are measured in metres */
 	private OrthographicCamera gameCamera;
+	private Viewport gameViewport;
 
-	public static Viewport gameViewport;
-	public static Viewport pixelViewport;
-	public static float PPM = 100f * getScale();
-	
+	/* Used for rendering text at an appropriate resolution */
+	private Viewport referenceUnitViewport;
+
 	private World world;
 
+	/* Box2D physics */
 	private final float TIMESTEP = 1/60f;
-	private final int VELOCITYITERATIONS = 8;
-	private final int POSITIONITERATIONS = 3;
-	private static float width = 5.4f;
-	private static float height = 9.6f;
-	
+	private final int VELOCITY_ITERATIONS = 8;
+	private final int POSITION_ITERATIONS = 3;
+	private final float WORLD_WIDTH = 5.4f;
+	private final float WORLD_HEIGHT = 9.6f;
+
+	/* Stores scores etc. */
 	private QuizManager quizManager;
 	
 	private ArrayList<Ball> balls;
-	
-	private ArrayList<GameObject> objectsToAdd;
-	private ArrayList<GameObject> objectsToRemove;
 
+	/* For queuing object addition/removal */
+	private Queue<GameObject> objectsToAdd;
+	private Queue<GameObject> objectsToRemove;
+
+	/* UI */
 	private Label score;
-	
 	private GlyphLayout glyphLayout;
-	
-	private int objectCreationCooldown;
-	
-	private ArrayList<Fixture> wallFixtures;
-	
-	private boolean gameEnded;
-	private boolean gameRestarting;
 	private Label gameOverMessage;
 	private Label highScoreLabel;
 	private Button buttonHome;
 	private Button buttonRetry;
+
+	/* Necessary to prevent lag */
+	private int objectCreationCooldown;
+
+	/* World */
+	private ArrayList<Fixture> wallFixtures;
+
+	/* States */
+	private boolean gameEnded;
+	private boolean gameRestarting;
 
 	public Play(ColorMatcher colorMatcher){
 		super(colorMatcher);
@@ -94,68 +101,28 @@ public class Play extends State{
 		this.quizManager = new Json().fromJson(QuizManager.class, Gdx.files.internal("data/quiz.json"));
 		this.quizManager.setPlay(colorMatcher);
 
-		this.objectsToAdd = new ArrayList<GameObject>();
-		this.objectsToRemove = new ArrayList<GameObject>();
+		this.objectsToAdd = new LinkedList<GameObject>();
+		this.objectsToRemove = new LinkedList<GameObject>();
+
 		this.balls = new ArrayList<Ball>();
 
 		this.gameCamera = new OrthographicCamera();
-		this.gameViewport = new FitViewport(width, height, gameCamera);
-		this.pixelViewport = new FitViewport(ColorMatcher.REF_WIDTH, ColorMatcher.REF_HEIGHT);
-
-		onEnter();
+		this.gameViewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, gameCamera);
+		this.referenceUnitViewport = new FitViewport(ColorMatcher.REF_WIDTH, ColorMatcher.REF_HEIGHT);
 	}
 
-	@Override
-	public void onEnter(){
-		gameEnded = false;
-		quizManager.onStart();
-		initObjects();
-		objectCreationCooldown = 2;
-
-	}
-	
-	@Override
-	public void onExit(){
-		destroyEnvironment();
-	}
-	
-	private void destroyEnvironment(){		
-		Array<Body> bodies = new Array<Body>();
-		world.getBodies(bodies);
-		
-		for(Body body : bodies){
-			world.destroyBody(body);
-		}
-		
-		balls.clear();
-		objectsToAdd.clear();
-		objectsToRemove.clear();
-		
-		timeline.kill();
-		timeline = Timeline.createSequence();
-		timeline.beginParallel()
-		.push(Tween.to(buttonHome, ActorAccessor.ALPHA, .5f).target(0))
-		.push(Tween.to(buttonRetry, ActorAccessor.ALPHA, .5f).target(0))
-		.push(Tween.to(gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
-		.push(Tween.to(highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
-		.push(Tween.to(score, ActorAccessor.ALPHA, .5f).target(0))
-		.end().start(tweenManager);
-	}
-	
 	@Override
 	public void show(){
 		Tween.registerAccessor(Actor.class, new ActorAccessor());
 		this.tweenManager = new TweenManager();
 
-		this.stage = new Stage(this.pixelViewport);
-
+		this.stage = new Stage(this.referenceUnitViewport);
 		this.atlas = new TextureAtlas("ui/button.pack");
 		this.skin = new Skin(Gdx.files.internal("ui/playSkin.json"), this.atlas);
 		this.table = new Table(this.skin);
 		this.table.setBounds(0, 0, this.stage.getWidth(), this.stage.getHeight());
 
 		this.glyphLayout = new GlyphLayout();
-
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
 		this.score = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
 
@@ -172,85 +139,46 @@ public class Play extends State{
 		.push(Tween.to(this.score, ActorAccessor.ALPHA, 1f).target(1))
 		.end().start(this.tweenManager);
 	}
-	
+
 	@Override
 	public void update(float delta) {
 		this.objectCreationCooldown --;
-		
-		for(Iterator<GameObject> it = objectsToAdd.iterator(); it.hasNext();){
-			GameObject o = it.next();
-			
-			if((objectCreationCooldown >= 0 && !(o instanceof RedBall)) || gameEnded)
-				break;
-						
-			if(o instanceof Ball){
-				balls.add((Ball) o);
-				it.remove();
-			}
-			
-			o.addToWorld(world);
-			
-			objectCreationCooldown = 10;
-			break;
+
+		/* Adds objects in queue to the world, if cooldown is over */
+		if(this.objectCreationCooldown <= 0 && !this.gameEnded && this.objectsToAdd.peek() != null) {
+			this.objectsToAdd.poll().addToWorld(this.world);
+			this.objectCreationCooldown = 10;
 		}
-		
-		for(Ball ball : balls){
+
+		/* Removes all objects in destroy queue from the world */
+		for(Iterator<GameObject> iterator = this.objectsToRemove.iterator(); iterator.hasNext();){
+			GameObject gameObject = iterator.next();
+
+			if(!(gameObject.canRemove())) continue;
+
+			gameObject.removeFromWorld();
+
+			iterator.remove();
+		}
+
+		for(Ball ball : this.balls){
 			ball.update();
-			
+
+			/* Checks condition for ending the game */
 			if(ball.getMeterPosition(true).y + ball.getRadius() > 9.6 && ball.getAliveTime() >= 100){
 				endGame();
 			}
 		}
-		
-		for(Iterator<GameObject> it = objectsToRemove.iterator(); it.hasNext();){
-			GameObject o = it.next();
-			
-			if(!(o.canRemove()))
-				continue;
-			
-			if(o instanceof Ball){
-				balls.remove(o);
-				o.dispose();
-				world.destroyBody(o.getFixture().getBody());
-			}
-			
-			it.remove();
-		}
 
 		this.quizManager.update();
 
-		this.world.step(TIMESTEP, VELOCITYITERATIONS, POSITIONITERATIONS);
-		
-		float scale = getScale();
-		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(quizManager.getScore()));
-		this.score.setText(Integer.toString(quizManager.getScore()));
-		this.table.getCell(score).width(glyphLayout.width * scale).height(glyphLayout.height * scale);
+		this.world.step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+
+		this.updateUI();
+
+		this.tweenManager.update(delta);
 
 		this.gameCamera.update();
-		this.tweenManager.update(delta);
-	}
-	
-	private void detectCollisions(){
-		for(Ball ball : balls){
-			boolean initialCollisionStatus = ball.isCollidingForFirst();
-			int collisionCount = 0;
-			for(Fixture wallFixture : wallFixtures){
-				Body wallBody = wallFixture.getBody();
-				if(ball.isColliding(wallBody.getPosition().x, wallBody.getPosition().y, ((float[]) wallFixture.getUserData())[0], 
-						((float[]) wallFixture.getUserData())[1], 2)){
-					collisionCount ++;
-					if(!ball.isCollidingForFirst())
-						ball.setIsCollidingForFirst(true);
-					else
-						break;
-				}
-			}
-			if(collisionCount == 0)
-				ball.setIsCollidingForFirst(false);
-			if(!initialCollisionStatus && ball.isCollidingForFirst()){
-				this.colorMatcher.getSoundManager().playSound(5);
-			}
-		}
 	}
 	
 	@Override
@@ -260,7 +188,7 @@ public class Play extends State{
 
 		gameViewport.apply();
 
-	    gameViewport.getCamera().position.set(width / 2, height / 2, 0);
+	    gameViewport.getCamera().position.set(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 0);
 		spriteBatch.setProjectionMatrix(gameViewport.getCamera().combined);
 
 		for(Ball b : balls){
@@ -269,7 +197,7 @@ public class Play extends State{
 			spriteBatch.end();
 		}
 
-		pixelViewport.apply();
+		referenceUnitViewport.apply();
 
 		stage.act();
 		stage.draw();	
@@ -277,21 +205,81 @@ public class Play extends State{
 	
 	@Override
 	public void resize(int width, int height) {
-		//super.resize(width, height);
-		gameViewport.update(width, height);
-		pixelViewport.update(width, height);
+		this.gameViewport.update(width, height);
+		this.referenceUnitViewport.update(width, height);
 	}
 
-	
+	/**
+	 * Updates the UI with the latest score.
+	 */
+	private void updateUI() {
+		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
+		this.score.setText(Integer.toString(this.quizManager.getScore()));
+		this.table.getCell(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height);
+	}
+
+	/* States */
+
+	@Override
+	public void onEnter(){
+		this.buildEnvironment();
+	}
+
+	@Override
+	public void onExit(){
+		this.destroyEnvironment();
+	}
+
+	/**
+	 * Initialises the game.
+	 */
+	private void buildEnvironment() {
+		this.gameEnded = false;
+		this.quizManager.onStart();
+		this.initObjects();
+		this.objectCreationCooldown = 2;
+	}
+
+	/**
+	 * Destroys the game-world to ready it to be initialised again.
+	 */
+	private void destroyEnvironment() {
+		/* Destroy all bodies in world */
+		Array<Body> bodies = new Array<Body>();
+		this.world.getBodies(bodies);
+
+		for(Body body : bodies){
+			this.world.destroyBody(body);
+		}
+
+		/* Clears data */
+		this.balls.clear();
+		this.objectsToAdd.clear();
+		this.objectsToRemove.clear();
+
+		this.timeline.kill();
+		this.timeline = Timeline.createSequence();
+		this.timeline.beginParallel()
+				.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.score, ActorAccessor.ALPHA, .5f).target(0))
+				.end().start(this.tweenManager);
+	}
+
+	/**
+	 * Retries the game.
+	 */
 	private void retry(){
-		gameRestarting = true;
-		
-		onExit();
+		this.gameRestarting = true;
+
+		this.destroyEnvironment();
 		
 		Timer.schedule(new Task(){
 			@Override
 			public void run(){
-				onEnter();
+				buildEnvironment();
 				show();
 				gameRestarting = false;
 			}
@@ -405,80 +393,26 @@ public class Play extends State{
 		
 		wallDef.position.set(0, 0);
 		
-		wall.createChain(new Vector2[]{new Vector2(0, 0), new Vector2(width, 0)});	
-		wall2.createChain(new Vector2[]{new Vector2(0, 0), new Vector2(0, height)});	
-		wall3.createChain(new Vector2[]{new Vector2(width, 0), new Vector2(width, height)});
+		wall.createChain(new Vector2[]{new Vector2(0, 0), new Vector2(WORLD_WIDTH, 0)});	
+		wall2.createChain(new Vector2[]{new Vector2(0, 0), new Vector2(0, WORLD_HEIGHT)});
+		wall3.createChain(new Vector2[]{new Vector2(WORLD_WIDTH, 0), new Vector2(WORLD_WIDTH, WORLD_HEIGHT)});
 		
 		wallFixtures = new ArrayList<Fixture>();
 	
 		fixtureDef.shape = wall;
 		wallFixtures.add(world.createBody(wallDef).createFixture(fixtureDef));
-		wallFixtures.get(0).setUserData(new float[]{width, 0});
+		wallFixtures.get(0).setUserData(new float[]{WORLD_WIDTH, 0});
 		
 		fixtureDef.shape = wall2;
 		wallFixtures.add(world.createBody(wallDef).createFixture(fixtureDef));
-		wallFixtures.get(1).setUserData(new float[]{0, height});
+		wallFixtures.get(1).setUserData(new float[]{0, WORLD_HEIGHT});
 
 		fixtureDef.shape = wall3;
 		wallFixtures.add(world.createBody(wallDef).createFixture(fixtureDef));
-		wallFixtures.get(2).setUserData(new float[]{0, height});
+		wallFixtures.get(2).setUserData(new float[]{0, WORLD_HEIGHT});
 	}
 
-	
-	public void addBall(Ball b){
-		objectsToAdd.add(b);
-	}
-	
-	public void removeBall(Ball b){
-		b.destroy();
-		objectsToRemove.add(b);
-	}
-	
-	public ArrayList<Ball> getBalls(){
-		return balls;
-	}
-	
-	@Override
-	public void touchDown(int x, int y, int pointer, int button){
-		stage.touchDown(x, y, pointer, button);
-		
-		if(gameEnded)
-			return;
-
-		Vector2 touchedPosition = this.screenCoordinatesToWorld(new Vector2(x, y));
-
-		for(int i = 0; i < balls.size(); i ++){
-			Ball ball = balls.get(i);
-
-			if(!(ball instanceof AnswerBall)) continue;
-			
-			Vector2 ballPosition = ball.getMeterPosition(false);
-			System.out.println(touchedPosition.x + " " +touchedPosition.y + " " + ballPosition.x +  " " + ballPosition.y);
-
-			if(touchedPosition.x < ballPosition.x || touchedPosition.x > touchedPosition.x + ball.getRadius() * 2
-					|| touchedPosition.y < ballPosition.y || touchedPosition.y > ballPosition.y + ball.getRadius() * 2){
-				continue;
-			}
-
-			quizManager.selectAnswer((AnswerBall) ball);
-		}
-	};
-	@Override
-	public void touchUp(int x, int y, int pointer, int button){
-		stage.touchUp(x, y, pointer, button);
-	}
-
-	public static float ptm(float pixels){
-		return pixels / PPM;
-	}
-	
-	public static float mtp(float m){
-		return m * PPM;
-	}
-
-	public static float metresToReferenceUnits(float metres) {
-		return ColorMatcher.REF_WIDTH / width * metres;
-	}
+	/* Units and conversions */
 
 	/**
 	 * Converts screen coordinates to world coordinates.
@@ -497,26 +431,22 @@ public class Play extends State{
 				unprojectedCoordinates.y
 		);
 	}
-	
-	public World getWorld(){
-		return world;
-	}
-	
-	public Body getBody(String name){
-		Array<Body> bodies = new Array<Body>();
-		world.getBodies(bodies);
-		for(Body b : bodies){
-			if(b.getUserData() == name){
-				return b;
-			}
-		}
-		return null;
+
+	/**
+	 * Converts metres to reference units.
+	 * @param metres The value in metres.
+	 * @return The value in reference units.
+	 */
+	public float metresToReferenceUnits(float metres) {
+		return ColorMatcher.REF_WIDTH / WORLD_WIDTH * metres;
 	}
 
-	public OrthographicCamera getGameCamera() {
-		return this.gameCamera;
-	}
-
+	/**
+	 * Returns a fixture's position in reference units.
+	 * @param fixture The fixture.
+	 * @param centre Whether to return the centre position.
+	 * @return A vector of the fixture's position in reference units.
+	 */
 	public Vector2 getReferenceUnitPosition(Fixture fixture, boolean centre){
 		Body body = fixture.getBody();
 		Shape shape = fixture.getShape();
@@ -524,7 +454,13 @@ public class Play extends State{
 		float y = metresToReferenceUnits(body.getPosition().y) - (centre ? 0 : metresToReferenceUnits(shape.getRadius()));
 		return new Vector2(x, y);
 	}
-	
+
+	/**
+	 * Returns a fixture's position in metres.
+	 * @param fixture The fixture.
+	 * @param centre Whether to return the centre position.
+	 * @return A vector of the fixture's position in metres.
+	 */
 	public Vector2 getMeterPosition(Fixture fixture, boolean centre){
 		Body body = fixture.getBody();
 		Shape shape = fixture.getShape();
@@ -533,15 +469,91 @@ public class Play extends State{
 		return new Vector2(x, y);
 	}
 
-	public static float getScale() {
-		float ratio = ColorMatcher.REF_HEIGHT / ColorMatcher.REF_WIDTH;
-		int screenWidth = Gdx.graphics.getWidth();
-		int screenHeight = Gdx.graphics.getHeight();
-		
-		if(screenHeight / screenWidth > ratio) {
-			return (float) screenWidth / ColorMatcher.REF_WIDTH ;
+	/* Events */
+
+	@Override
+	public void touchDown(int x, int y, int pointer, int button){
+
+		this.stage.touchDown(x, y, pointer, button);
+
+		if(this.gameEnded) return;
+
+		Vector2 touchedPosition = this.screenCoordinatesToWorld(new Vector2(x, y));
+
+		/* Checks whether the touched position is in proximity of a game-object */
+		for(int i = 0; i < balls.size(); i ++){
+
+			Ball ball = balls.get(i);
+
+			if(!(ball instanceof AnswerBall)) continue;
+
+			Vector2 ballPosition = ball.getMeterPosition(false);
+
+			if(touchedPosition.x < ballPosition.x || touchedPosition.x > touchedPosition.x + ball.getRadius() * 2
+					|| touchedPosition.y < ballPosition.y || touchedPosition.y > ballPosition.y + ball.getRadius() * 2){
+				continue;
+			}
+
+			quizManager.selectAnswer((AnswerBall) ball);
+
 		}
-		
-		return (float) screenHeight / ColorMatcher.REF_HEIGHT;
+
 	}
+
+	@Override
+	public void touchUp(int x, int y, int pointer, int button){
+		this.stage.touchUp(x, y, pointer, button);
+	}
+
+	/* Setters and getters */
+
+	/**
+	 * Adds a new ball to the world.
+	 * @param ball The ball.
+	 */
+	public void addBall(Ball ball){
+		objectsToAdd.add(ball);
+	}
+
+	/**
+	 * Removes a ball from the world.
+	 * @param ball The ball to be removed.
+	 */
+	public void removeBall(Ball ball){
+		ball.destroy();
+		objectsToRemove.add(ball);
+	}
+
+	/**
+	 * Returns the world.
+	 * @return The world.
+	 */
+	public World getWorld(){
+		return world;
+	}
+
+	/**
+	 * Returns the game-world camera.
+	 * @return The game-world camera.
+	 */
+	public OrthographicCamera getGameCamera() {
+		return this.gameCamera;
+	}
+
+	/**
+	 * Returns the reference unit viewport.
+	 * @return The reference unit viewport.
+	 */
+	public Viewport getReferenceUnitViewport() {
+		return this.referenceUnitViewport;
+	}
+
+	/**
+	 * Returns the balls loaded in the world.
+	 * @return The balls.
+	 */
+	public ArrayList<Ball> getBalls(){
+		return balls;
+	}
+
 }

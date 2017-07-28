@@ -43,6 +43,11 @@ public abstract class GameObject {
 		body = this.colorMatcher.getPlayState().getWorld().createBody(bodyDef);
 		fixture = body.createFixture(fixtureDef);
 	}
+
+	public void removeFromWorld() {
+		this.dispose();
+		this.colorMatcher.getPlayState().getWorld().destroyBody(this.fixture.getBody());
+	}
 	
 	public Vector2 getMeterPosition(boolean centre){
 		return new Vector2(

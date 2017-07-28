@@ -8,8 +8,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.colormatcher.game.ColorMatcher;
-import com.mygdx.colormatcher.screens.Play;
 
 public abstract class Ball extends GameObject{
 	
@@ -101,7 +101,7 @@ public abstract class Ball extends GameObject{
 		glyphLayout.setText(bitmapFont, this.label);
 		
 		/** The pixel side length of the square available for the text to be drawn inside. **/
-		float availableSideUnits = 0.8f * 2 * Play.metresToReferenceUnits(this.radius);
+		float availableSideUnits = 0.8f * 2 * this.colorMatcher.getPlayState().metresToReferenceUnits(this.radius);
 						
 		float scale = availableSideUnits / (glyphLayout.width > glyphLayout.height ? glyphLayout.width : glyphLayout.height);
 		
@@ -109,7 +109,7 @@ public abstract class Ball extends GameObject{
 		bitmapFont.setColor(0f, 0f, 0f, this.alpha);
 		Vector2 referenceUnitPosition = this.getReferenceUnitPosition(true);
 		
-		batch.setProjectionMatrix(Play.pixelViewport.getCamera().combined);
+		batch.setProjectionMatrix(this.colorMatcher.getPlayState().getReferenceUnitViewport().getCamera().combined);
 		
 		float scaledWidth = scale * glyphLayout.width;
 		float scaledHeight = scale * glyphLayout.height;
@@ -119,6 +119,18 @@ public abstract class Ball extends GameObject{
 		batch.setProjectionMatrix(this.colorMatcher.getPlayState().getGameCamera().combined);
 		
 		bitmapFont.getData().setScale(1f);
+	}
+
+	@Override
+	public void addToWorld(World world) {
+		super.addToWorld(world);
+		this.colorMatcher.getPlayState().getBalls().add(this);
+	}
+
+	@Override
+	public void removeFromWorld() {
+		super.removeFromWorld();
+		this.colorMatcher.getPlayState().getBalls().remove(this);
 	}
 		
 }

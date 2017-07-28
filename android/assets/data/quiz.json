@@ -1,56 +1,25 @@
 {
-problems: [
-	{
-		question: d/dx sin(x)
-		answers: [
-			cos(x)
-			-cos(x)
-			-sin(x)
-		]
-	}
-	{
-		question: d/dx cos(x)
-		answers: [
-			-sin(x)
-			sin(x)
-			-cos(x)
-		]
-	}
-	{
-		question: d/dx tan(x)
-		answers: [
-			sec^2(x)
-			sec(x)
-			-sec^2(x)
-		]
-	}
-	{
-		question: d/dx csc(x)
-		answers: [
-			-csc cot(x)
-			csc cot(x)
-			-cot(x)
-		]
-	}
-	{
-		question: d/dx sec(x)
-		answers: [
-			sec tan(x)
-			-tan(x)
-			tan(x)
-		]
-	}
-	{
-		question: d/dx cot(x)
-		answers: [
-			-csc^2(x)
-			csc(x)
-			-cos(x)
-		]
-	}
-]
-score: 3
-highScore: 20
-timer: 72
-gameEnded: true
+	"problems" : [
+		{
+			"question" : "d/dx sin(x)",
+			"answers" : [
+				"cos(x)",
+				"-cos(x)",
+				"-sin(x)"
+			]
+		},
+		{
+			"question" : "d/dx cos(x)",
+			"answers" : [
+				"-sin(x)",
+				"sin(x)",
+				"-cos(x)"
+			]
+		}
+	],
+
+	"score": 2,
+	"highScore": 20,
+	"timer": 97,
+	"gameEnded": true
 }

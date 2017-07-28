@@ -85,9 +85,11 @@ public class GameStateManager {
 	/** Enters a new state.
 	 * @param stateEnum The next state.
 	 */
+
 	public void enterState(StateEnum stateEnum){
 		this.currentStateEnum = stateEnum;
 		this.colorMatcher.setScreen(this.states.get(stateEnum));
+		this.states.get(this.currentStateEnum).onEnter();
 	}
 
 	public State getState(StateEnum stateEnum) {
