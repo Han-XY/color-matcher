@@ -55,19 +55,11 @@ public class AnswerBall extends Ball{
 	@Override
 	public void update() {
 		super.update();
-		
-		if(dead){
-			radius *= 1.1f;
-			this.alpha -= .1f;
-			
-			deathTimer --;			
-			if(deathTimer <= 0)
-				shouldRemove = true;
-		}	
+		this.updateDeathAnimation();
 	}
 	
 	public int getAnswerIndex(){
-		return answerIndex;
+		return this.answerIndex;
 	}
 	
 	@Override

@@ -11,8 +11,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.colormatcher.game.ColorMatcher;
 
+/**
+ * A Ball is a clickable entity of the game.
+ */
 public abstract class Ball extends GameObject{
-	
+
 	protected String label;
 	protected float x, y;
 	protected int questionID;
@@ -20,13 +23,15 @@ public abstract class Ball extends GameObject{
 	protected int deathTimer;
 	protected int maxDeathTime;
 	protected float radius;
+	protected float tempRadius; //stores the original radius while the radius is being modified.
 	protected int aliveTime;
-	
+
+	/* Rendering */
 	private Pixmap pixmap;
 	private Texture texture;
-	
 	protected Color color;
-	
+
+	/** Used to determine if alpha has been modified */
 	private float lastAlpha;
 	
 	public Ball(String label, int questionID, float x, float y, float radius, Color color, ColorMatcher colorMatcher){
@@ -43,13 +48,17 @@ public abstract class Ball extends GameObject{
 		this.initPixmap();
 		this.updateTexture();
 	}
-	
+
+	/**
+	 * Initialises a pixmap for rendering the shape.
+	 */
 	private void initPixmap() {
 		this.pixmap = new Pixmap(200, 200, Pixmap.Format.RGBA8888);
 	}
-	
+
+	/** Updates the shape texture with new alpha */
 	private void updateTexture() {
-		lastAlpha = this.alpha;
+		this.lastAlpha = this.alpha;
 		this.pixmap.setBlending(Blending.None);
 		this.pixmap.setColor(this.color.r, this.color.g, this.color.b, this.alpha);
 		this.pixmap.fillCircle(100, 100, 100);
@@ -58,19 +67,15 @@ public abstract class Ball extends GameObject{
 	
 	@Override
 	public void update(){
-		aliveTime ++;
+		this.aliveTime ++;
 	}
 	
 	public float getRadius(){
-		return radius;
-	}
-
-	public String getLabel() {
-		return this.label;
+		return this.radius;
 	}
 	
 	public int getQuestionID(){
-		return questionID;
+		return this.questionID;
 	}
 	
 	public void destroy(){
@@ -100,15 +105,17 @@ public abstract class Ball extends GameObject{
 		bitmapFont.getData().setScale(1f);
 		glyphLayout.setText(bitmapFont, this.label);
 		
-		/** The pixel side length of the square available for the text to be drawn inside. **/
+		/* The pixel side length of the square available for the text to be drawn inside. */
 		float availableSideUnits = 0.8f * 2 * this.colorMatcher.getPlayState().metresToReferenceUnits(this.radius);
-						
+
+		/* Calculates by determining the side that meets the limit the first */
 		float scale = availableSideUnits / (glyphLayout.width > glyphLayout.height ? glyphLayout.width : glyphLayout.height);
 		
 		bitmapFont.getData().setScale(scale);
 		bitmapFont.setColor(0f, 0f, 0f, this.alpha);
 		Vector2 referenceUnitPosition = this.getReferenceUnitPosition(true);
-		
+
+		/* Changes projection matrix to reference units so that the font is visible */
 		batch.setProjectionMatrix(this.colorMatcher.getPlayState().getReferenceUnitViewport().getCamera().combined);
 		
 		float scaledWidth = scale * glyphLayout.width;
@@ -119,6 +126,36 @@ public abstract class Ball extends GameObject{
 		batch.setProjectionMatrix(this.colorMatcher.getPlayState().getGameCamera().combined);
 		
 		bitmapFont.getData().setScale(1f);
+	}
+
+	protected void updateCreationAnimation() {
+		if(this.tempRadius == 0) {
+			this.tempRadius = this.radius;
+			this.radius *= .2f;
+			this.alpha = .2f;
+		}
+
+		this.radius *= 1.3f;
+		this.alpha += .1f;
+
+		if(this.radius >= this.tempRadius) {
+			this.radius = this.tempRadius;
+			this.alpha = 1f;
+		}
+	}
+
+	/**
+	 * Updates the death animation of the ball.
+	 */
+	protected void updateDeathAnimation() {
+		if(this.dead){
+			this.radius *= 1.1f;
+			this.alpha -= .1f;
+
+			this.deathTimer --;
+			if(this.deathTimer <= 0)
+				this.shouldRemove = true;
+		}
 	}
 
 	@Override

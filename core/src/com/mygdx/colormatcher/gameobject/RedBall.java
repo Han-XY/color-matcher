@@ -51,6 +51,8 @@ public class RedBall extends Ball{
 	@Override
 	public void update() {
 		super.update();
+
+		this.updateCreationAnimation();
 	}
 	
 	@Override

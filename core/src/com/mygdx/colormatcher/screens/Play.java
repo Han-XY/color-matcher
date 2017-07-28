@@ -73,6 +73,7 @@ public class Play extends State{
 	/* For queuing object addition/removal */
 	private Queue<GameObject> objectsToAdd;
 	private Queue<GameObject> objectsToRemove;
+	private final int OBJECT_CREATION_COOLDOWN = 5;
 
 	/* UI */
 	private Label score;
@@ -147,7 +148,7 @@ public class Play extends State{
 		/* Adds objects in queue to the world, if cooldown is over */
 		if(this.objectCreationCooldown <= 0 && !this.gameEnded && this.objectsToAdd.peek() != null) {
 			this.objectsToAdd.poll().addToWorld(this.world);
-			this.objectCreationCooldown = 10;
+			this.objectCreationCooldown = this.OBJECT_CREATION_COOLDOWN;
 		}
 
 		/* Removes all objects in destroy queue from the world */

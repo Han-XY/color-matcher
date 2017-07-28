@@ -51,14 +51,7 @@ public class QuestionBall extends Ball{
 	public void update() {
 		super.update();
 		
-		if(dead){	
-			radius *= 1.1f;
-			alpha -= .1f;
-			
-			deathTimer --;			
-			if(deathTimer <= 0)
-				shouldRemove = true;
-		}
+		this.updateDeathAnimation();
 	}
 	
 	@Override
