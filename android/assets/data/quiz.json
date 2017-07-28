@@ -1,25 +1,23 @@
 {
-	"problems" : [
-		{
-			"question" : "d/dx sin(x)",
-			"answers" : [
-				"cos(x)",
-				"-cos(x)",
-				"-sin(x)"
-			]
-		},
-		{
-			"question" : "d/dx cos(x)",
-			"answers" : [
-				"-sin(x)",
-				"sin(x)",
-				"-cos(x)"
-			]
-		}
-	],
-
-	"score": 2,
-	"highScore": 20,
-	"timer": 97,
-	"gameEnded": true
+"problems": [
+	{
+		"question": "d/dx sin(x)",
+		"answers": [
+			"cos(x)",
+			"-cos(x)",
+			"-sin(x)"
+		]
+	},
+	{
+		"question": "d/dx cos(x)",
+		"answers": [
+			"-sin(x)",
+			"sin(x)",
+			"-cos(x)"
+		]
+	}
+],
+"highScore": 20,
+"timer": 24,
+"gameEnded": true
 }

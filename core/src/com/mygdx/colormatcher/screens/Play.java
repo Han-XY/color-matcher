@@ -35,6 +35,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -315,6 +316,7 @@ public class Play extends State{
 		quizManager.endGame();
 		
 		Json json = new Json();
+		json.setOutputType(JsonWriter.OutputType.json);
 		String jsonString = json.prettyPrint(quizManager);
 		Gdx.files.local("data/quiz.json").writeString(jsonString, false);
 		
