@@ -313,7 +313,7 @@ public class Play extends State{
 		table.row();
 		
 		int oldHighScore = quizManager.getHighScore();
-		quizManager.endGame();
+		quizManager.onEnd();
 		
 		Json json = new Json();
 		json.setOutputType(JsonWriter.OutputType.json);
@@ -497,7 +497,7 @@ public class Play extends State{
 				continue;
 			}
 
-			quizManager.selectAnswer((AnswerBall) ball);
+			quizManager.onAnswerSelect((AnswerBall) ball);
 
 		}
 
