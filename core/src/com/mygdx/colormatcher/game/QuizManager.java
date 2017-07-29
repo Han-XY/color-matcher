@@ -1,7 +1,6 @@
 package com.mygdx.colormatcher.game;
-
-import java.util.Random;
-
+import java.util.*;
+import com.badlogic.gdx.graphics.Color;
 import com.mygdx.colormatcher.gameobject.AnswerBall;
 import com.mygdx.colormatcher.gameobject.Ball;
 import com.mygdx.colormatcher.gameobject.QuestionBall;
@@ -12,16 +11,23 @@ import com.mygdx.colormatcher.gameobject.RedBall;
  */
 public class QuizManager {
 
-	private Problem[] problems;
 	private int score;
 	private int highScore;
 	private int timer;
 	private boolean gameEnded;
 
-	private final int QUESTION_DURATION = 100;
+	private final int QUESTION_DURATION = 200;
+
+	/** The theme color for the game. */
+	private Color color;
+	private float segments;
+	private final float MAX_SEGMENTS = 100f;
 
 	/** Keep transient to avoid circular references being serialised */
 	private transient ColorMatcher colorMatcher;
+
+	/** Stores all the questions so far. The correct answer is always the 0th element of the answer array. */
+	private transient Map<QuestionBall, ArrayList<AnswerBall>> problems;
 
 	public void update(){
 
@@ -42,13 +48,13 @@ public class QuizManager {
 	 */
 	public void onAnswerSelect(AnswerBall answerBall){
 
-		if(this.isAnswerCorrect(answerBall.getAnswerIndex(), answerBall.getQuestionID())){
+		if(this.isAnswerCorrect(answerBall)) {
 
-			this.onCorrectAnswer(answerBall.getQuestionID());
+			this.onCorrectAnswer(answerBall);
 
-		}else{
+		}else {
 
-			this.onIncorrectAnswer(answerBall.getQuestionID());
+			this.onIncorrectAnswer(answerBall);
 
 		}
 
@@ -56,13 +62,21 @@ public class QuizManager {
 
 	/**
 	 * Called when a question has been answered correctly.
-	 * @param questionId The ID of the question.
+	 * @param answerBall The answer-ball chosen.
 	 */
-	private void onCorrectAnswer(int questionId){
+	private void onCorrectAnswer(AnswerBall answerBall){
 
-		for(Ball ball : this.colorMatcher.getPlayState().getBalls()){
+		for(QuestionBall questionBall : this.problems.keySet()) {
 
-			if(ball.getQuestionID() == questionId){
+			ArrayList<AnswerBall> answerBalls = this.problems.get(questionBall);
+
+			if(!answerBalls.contains(answerBall)) continue;
+
+			ArrayList<Ball> balls = new ArrayList<Ball>(answerBalls);
+
+			balls.add(questionBall);
+
+			for(Ball ball : balls) {
 
 				this.colorMatcher.getPlayState().removeBall(ball);
 
@@ -78,26 +92,22 @@ public class QuizManager {
 
 	/**
 	 * Called when a question has been incorrectly answered.
-	 * @param questionId The ID of the question.
+	 * @param answerBall The chosen answer-ball.
 	 */
-	private void onIncorrectAnswer(int questionId){
+	private void onIncorrectAnswer(AnswerBall answerBall){
 
-		int numberOfBalls = this.colorMatcher.getPlayState().getBalls().size();
+		ArrayList<AnswerBall> answerBallArrayList = this.getArrayOfAnswers(answerBall);
 
-		for(int i = 0; i < numberOfBalls; i ++){
+		if(answerBallArrayList == null) return;
 
-			Ball ball = this.colorMatcher.getPlayState().getBalls().get(i);
+		for(AnswerBall answer : answerBallArrayList) {
 
-			if(ball.getQuestionID() == questionId && ball instanceof AnswerBall){
+			for(int i = 0; i < new Random().nextInt(2) + 1; i ++){
 
-				for(int j = 0; j < new Random().nextInt(2) + 1; j ++){
-
-					this.colorMatcher.getPlayState().addBall(
-							new RedBall("", questionId,
-							.3f, ball.getMeterPosition(true).x, ball.getMeterPosition(true).y, this.colorMatcher)
-					);
-
-				}
+				this.colorMatcher.getPlayState().addBall(
+						new RedBall(answer.getMeterPosition(true).x, answer.getMeterPosition(true).y,
+								.3f, this.colorMatcher)
+				);
 
 			}
 
@@ -108,27 +118,52 @@ public class QuizManager {
 	}
 
 	/**
-	 * Moves onto the next question.
+	 * Moves onto the next question, choosing the question color properties and queueing them to be added to the game.
 	 */
 	private void onNextQuestion(){
 
 		Random random = new Random();
 
-		int questionIndex = random.nextInt(this.problems.length);
-		
-		Problem problem = this.problems[questionIndex];
-			
-		QuestionBall questionBall = new QuestionBall(problem.getQuestion(), questionIndex, random.nextInt(2) + 1, random.nextInt(5) + 10, 1f, this.colorMatcher);
+		int spawns = random.nextInt(3) + 3;
+
+		AnswerBall[] answerBalls = new AnswerBall[spawns];
+
+		QuestionBall questionBall = new QuestionBall(
+				random.nextInt(2) + 1, random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
+		);
 
 		this.colorMatcher.getPlayState().addBall(questionBall);
-		
-		
-		for(int i = 0; i < 3; i ++){
 
-			this.colorMatcher.getPlayState().addBall(new AnswerBall(problem.getAnswers()[i]
-					, questionIndex, i, random.nextInt(2) + 1, random.nextInt(5) + 10, (float) (random.nextInt(3) + 4) / 10, this.colorMatcher));
+		boolean[] directions = new boolean[]{random.nextBoolean(), random.nextBoolean(), random.nextBoolean()};
+
+		for(int i = 0; i < spawns; i ++) {
+
+			float[] rgb = new float[]{this.color.r, this.color.g, this.color.b};
+
+			for(int j = 0; j < 3; j ++) {
+
+				rgb[j] = directions[j] ? rgb[j] + (1f - rgb[j]) / this.segments
+						: rgb[j] - rgb[j] / this.segments;
+
+			}
+
+			Color newColor = new Color(rgb[0], rgb[1], rgb[2], 1f);
+
+			answerBalls[i] = new AnswerBall(random.nextInt(2) + 1, random.nextInt(5) + 10,
+					(float) (random.nextInt(3) + 4) / 10,
+					newColor, this.colorMatcher);
+
+			this.colorMatcher.getPlayState().addBall(answerBalls[i]);
+
+			this.color = newColor;
 
 		}
+
+		this.problems.put(questionBall, new ArrayList<AnswerBall>(Arrays.asList(answerBalls)));
+
+		this.segments *= 1.1f;
+
+		if(this.segments > this.MAX_SEGMENTS) this.segments = this.MAX_SEGMENTS;
 
 	}
 
@@ -136,14 +171,36 @@ public class QuizManager {
 
 	/**
 	 * Determines whether a selected answer is correct.
-	 * @param userAnswerIndex The selected answer index.
-	 * @param questionIndex The question index.
+	 * @param chosenAnswer The selected answer-ball.
 	 * @return Whether the answer at the selected index is correct.
 	 */
-	private boolean isAnswerCorrect(int userAnswerIndex, int questionIndex){
+	private boolean isAnswerCorrect(AnswerBall chosenAnswer){
 
-		return (userAnswerIndex == this.problems[questionIndex].getCorrectPosition());
+		for(ArrayList<AnswerBall> answerBallArrayList : this.problems.values()) {
 
+			if(chosenAnswer == answerBallArrayList.get(0)) return true;
+
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Returns the answer-ball array-list in which the answer-ball belongs.
+	 * @param answerBall The answer-ball.
+	 * @return The array-list of itself and all the other answers to the same problem.
+	 * @throws NullPointerException if answer does not belong in any problem.
+	 */
+	private ArrayList<AnswerBall> getArrayOfAnswers(AnswerBall answerBall) {
+
+		for(ArrayList<AnswerBall> answerBallArrayList : this.problems.values()) {
+
+			if(answerBallArrayList.contains(answerBall)) return answerBallArrayList;
+
+		}
+
+		return null;
 	}
 
 	/* State management */
@@ -155,6 +212,17 @@ public class QuizManager {
 		this.timer = 10;
 		this.score = 0;
 		this.gameEnded = false;
+
+		Random random = new Random();
+		this.color = new Color(
+				.2f + random.nextFloat() * .8f,
+				.2f + random.nextFloat() * .8f,
+				.2f + random.nextFloat() * .8f,
+				1f
+		);
+
+		this.segments = 10;
+
 	}
 
 	/**
@@ -170,8 +238,9 @@ public class QuizManager {
 
 	/* Setters and getters */
 
-	public void setPlay(ColorMatcher colorMatcher) {
+	public void initAfterLoad(ColorMatcher colorMatcher) {
 		this.colorMatcher = colorMatcher;
+		this.problems = new HashMap<QuestionBall, ArrayList<AnswerBall>>();
 	}
 
 	public int getScore(){

@@ -101,7 +101,7 @@ public class Play extends State{
 		this.world = new World(new Vector2(0, -9.81f), true);
 
 		this.quizManager = new Json().fromJson(QuizManager.class, Gdx.files.internal("data/quiz.json"));
-		this.quizManager.setPlay(colorMatcher);
+		this.quizManager.initAfterLoad(colorMatcher);
 
 		this.objectsToAdd = new LinkedList<GameObject>();
 		this.objectsToRemove = new LinkedList<GameObject>();
@@ -490,10 +490,10 @@ public class Play extends State{
 
 			if(!(ball instanceof AnswerBall)) continue;
 
-			Vector2 ballPosition = ball.getMeterPosition(false);
+			Vector2 ballPosition = ball.getMeterPosition(true);
 
-			if(touchedPosition.x < ballPosition.x || touchedPosition.x > touchedPosition.x + ball.getRadius() * 2
-					|| touchedPosition.y < ballPosition.y || touchedPosition.y > ballPosition.y + ball.getRadius() * 2){
+			if(Math.pow(touchedPosition.x - ballPosition.x, 2) + Math.pow(touchedPosition.y - ballPosition.y, 2) >
+					Math.pow(ball.getRadius(), 2)) {
 				continue;
 			}
 

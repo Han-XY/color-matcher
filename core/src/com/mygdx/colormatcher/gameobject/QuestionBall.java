@@ -14,8 +14,8 @@ import com.mygdx.colormatcher.game.ColorMatcher;
 
 public class QuestionBall extends Ball{
 				
-	public QuestionBall(String question, int questionID, int x, int y, float radius, ColorMatcher colorMatcher){
-		super(question, questionID, x, y, radius, Color.WHITE, colorMatcher);
+	public QuestionBall(int x, int y, float radius, Color color, ColorMatcher colorMatcher){
+		super("", x, y, radius, color, colorMatcher);
 	}
 	
 	@Override

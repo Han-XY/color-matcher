@@ -14,8 +14,8 @@ import com.mygdx.colormatcher.game.ColorMatcher;
 
 public class RedBall extends Ball{
 
-	public RedBall(String label, int questionID, float radius, float x, float y, ColorMatcher colorMatcher) {
-		super(label, questionID, x, y, radius, Color.RED, colorMatcher);
+	public RedBall(float x, float y, float radius, ColorMatcher colorMatcher) {
+		super("", x, y, radius, Color.RED, colorMatcher);
 	}
 	
 	@Override

@@ -18,7 +18,6 @@ public abstract class Ball extends GameObject{
 
 	protected String label;
 	protected float x, y;
-	protected int questionID;
 	protected boolean dead;
 	protected int deathTimer;
 	protected int maxDeathTime;
@@ -34,11 +33,10 @@ public abstract class Ball extends GameObject{
 	/** Used to determine if alpha has been modified */
 	private float lastAlpha;
 	
-	public Ball(String label, int questionID, float x, float y, float radius, Color color, ColorMatcher colorMatcher){
+	public Ball(String label, float x, float y, float radius, Color color, ColorMatcher colorMatcher){
 		super(colorMatcher);
 
 		this.label = label;
-		this.questionID = questionID;
 		this.x = x;
 		this.y = y;
 		this.width = radius * 2;
@@ -73,11 +71,7 @@ public abstract class Ball extends GameObject{
 	public float getRadius(){
 		return this.radius;
 	}
-	
-	public int getQuestionID(){
-		return this.questionID;
-	}
-	
+
 	public void destroy(){
 		this.dead = true;
 		this.deathTimer = maxDeathTime;

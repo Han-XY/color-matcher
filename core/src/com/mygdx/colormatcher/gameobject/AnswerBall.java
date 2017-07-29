@@ -14,13 +14,9 @@ import com.mygdx.colormatcher.game.ColorMatcher;
 import com.mygdx.colormatcher.utils.TextRenderer;
 
 public class AnswerBall extends Ball{
-	
-	private int answerIndex;
 
-	public AnswerBall(String answer, int questionID, int answerIndex, int x, int y, float radius, ColorMatcher colorMatcher){
-		super(answer, questionID, x, y, radius, Color.WHITE, colorMatcher);
-
-		this.answerIndex = answerIndex;
+	public AnswerBall(int x, int y, float radius, Color color, ColorMatcher colorMatcher){
+		super("", x, y, radius, color, colorMatcher);
 	}
 	
 	@Override
@@ -57,11 +53,7 @@ public class AnswerBall extends Ball{
 		super.update();
 		this.updateDeathAnimation();
 	}
-	
-	public int getAnswerIndex(){
-		return this.answerIndex;
-	}
-	
+
 	@Override
 	public void dispose() {
 
