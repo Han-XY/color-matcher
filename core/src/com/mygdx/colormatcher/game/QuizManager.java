@@ -100,16 +100,14 @@ public class QuizManager {
 
 		if(answerBallArrayList == null) return;
 
-		for(AnswerBall answer : answerBallArrayList) {
+		AnswerBall answer = answerBallArrayList.get(new Random().nextInt(answerBallArrayList.size()));
 
-			for(int i = 0; i < new Random().nextInt(2) + 1; i ++){
+		for(int i = 0; i < new Random().nextInt(2) + 1; i ++){
 
-				this.colorMatcher.getPlayState().addBall(
-						new RedBall(answer.getMeterPosition(true).x, answer.getMeterPosition(true).y,
-								.3f, this.colorMatcher)
-				);
-
-			}
+			this.colorMatcher.getPlayState().addBall(
+					new RedBall(answer.getMeterPosition(true).x, answer.getMeterPosition(true).y,
+							.3f, this.colorMatcher)
+			);
 
 		}
 

@@ -144,6 +144,7 @@ public class Play extends State{
 
 	@Override
 	public void update(float delta) {
+
 		this.objectCreationCooldown --;
 
 		/* Adds objects in queue to the world, if cooldown is over */
@@ -166,9 +167,9 @@ public class Play extends State{
 		for(Ball ball : this.balls){
 			ball.update();
 
-			/* Checks condition for ending the game */
+			// Checks condition for ending the game
 			if(ball.getMeterPosition(true).y + ball.getRadius() > 9.6 && ball.getAliveTime() >= 100){
-				endGame();
+				this.endGame();
 			}
 		}
 

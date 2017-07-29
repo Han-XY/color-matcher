@@ -39,9 +39,9 @@ public abstract class GameObject {
 	public abstract void update();
 		
 	public void addToWorld(World world){
-		init();
-		body = this.colorMatcher.getPlayState().getWorld().createBody(bodyDef);
-		fixture = body.createFixture(fixtureDef);
+		this.init();
+		this.body = this.colorMatcher.getPlayState().getWorld().createBody(this.bodyDef);
+		this.fixture = this.body.createFixture(this.fixtureDef);
 	}
 
 	public void removeFromWorld() {
@@ -50,17 +50,11 @@ public abstract class GameObject {
 	}
 	
 	public Vector2 getMeterPosition(boolean centre){
-		return new Vector2(
-				this.colorMatcher.getPlayState().getMeterPosition(fixture, centre).x,
-				this.colorMatcher.getPlayState().getMeterPosition(fixture, centre).y
-		);
+		return this.colorMatcher.getPlayState().getMeterPosition(fixture, centre);
 	}
 
 	public Vector2 getReferenceUnitPosition(boolean centre) {
-		return new Vector2(
-				this.colorMatcher.getPlayState().getReferenceUnitPosition(fixture, centre).x,
-				this.colorMatcher.getPlayState().getReferenceUnitPosition(fixture, centre).y
-		);
+		return this.colorMatcher.getPlayState().getReferenceUnitPosition(fixture, centre);
 	}
 	
 	public Fixture getFixture(){

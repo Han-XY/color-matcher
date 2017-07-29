@@ -21,22 +21,22 @@ public class AnswerBall extends Ball{
 	
 	@Override
 	public void init() {
-		bodyDef = new BodyDef();
-		bodyDef.type = BodyType.DynamicBody;
-		bodyDef.position.set(new Vector2(x, y));
+		this.bodyDef = new BodyDef();
+		this.bodyDef.type = BodyType.DynamicBody;
+		this.bodyDef.position.set(new Vector2(x, y));
 
-		shape = new CircleShape();
-		shape.setRadius(radius);
-		
-		fixtureDef = new FixtureDef();
-		fixtureDef.shape = shape;
-		fixtureDef.density = 2.5f;
-		fixtureDef.friction = .25f;
-		fixtureDef.restitution = .5f;	
-		
-		alpha = 1;
+		this.shape = new CircleShape();
+		this.shape.setRadius(this.radius);
 
-		maxDeathTime = 5;
+		this.fixtureDef = new FixtureDef();
+		this.fixtureDef.shape = shape;
+		this.fixtureDef.density = 2.5f;
+		this.fixtureDef.friction = .25f;
+		this.fixtureDef.restitution = .5f;
+
+		this.alpha = 1;
+
+		this.maxDeathTime = 5;
 	}
 
 	@Override
@@ -44,7 +44,6 @@ public class AnswerBall extends Ball{
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		this.drawBody(batch);
-	    this.drawLabel(batch);
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 	

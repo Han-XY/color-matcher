@@ -1,11 +1,14 @@
 package com.mygdx.colormatcher.gameobject;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Blending;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
@@ -26,13 +29,20 @@ public abstract class Ball extends GameObject{
 	protected int aliveTime;
 
 	/* Rendering */
-	private Pixmap pixmap;
-	private Texture texture;
-	protected Color color;
+	protected static Pixmap pixmap;
+	protected static Texture texture;
 
-	/** Used to determine if alpha has been modified */
-	private float lastAlpha;
-	
+	protected Color color;
+	protected Sprite sprite;
+
+	static {
+		pixmap = new Pixmap(10, 10, Pixmap.Format.RGBA8888);
+		pixmap.setBlending(Blending.None);
+		pixmap.setColor(1f, 1f, 1f, 1f);
+		pixmap.fillCircle(5, 5, 5);
+		texture = new Texture(pixmap);
+	}
+
 	public Ball(String label, float x, float y, float radius, Color color, ColorMatcher colorMatcher){
 		super(colorMatcher);
 
@@ -42,32 +52,15 @@ public abstract class Ball extends GameObject{
 		this.width = radius * 2;
 		this.radius = radius;
 		this.color =  color;
-		
-		this.initPixmap();
-		this.updateTexture();
+
+		this.sprite = new Sprite(texture);
 	}
 
-	/**
-	 * Initialises a pixmap for rendering the shape.
-	 */
-	private void initPixmap() {
-		this.pixmap = new Pixmap(50, 50, Pixmap.Format.RGBA8888);
-	}
-
-	/** Updates the shape texture with new alpha */
-	private void updateTexture() {
-		this.lastAlpha = this.alpha;
-		this.pixmap.setBlending(Blending.None);
-		this.pixmap.setColor(this.color.r, this.color.g, this.color.b, this.alpha);
-		this.pixmap.fillCircle(25, 25, 25);
-		this.texture = new Texture(this.pixmap);
-	}
-	
 	@Override
 	public void update(){
 		this.aliveTime ++;
 	}
-	
+
 	public float getRadius(){
 		return this.radius;
 	}
@@ -77,20 +70,19 @@ public abstract class Ball extends GameObject{
 		this.deathTimer = maxDeathTime;
 	}
 	
-	@Override
-	public void dispose() {
-		this.pixmap.dispose();
-	}
-	
 	public int getAliveTime(){
-		return aliveTime;
+		return this.aliveTime;
 	}
 	
 	protected void drawBody(SpriteBatch batch) {
-		if(lastAlpha != this.alpha) updateTexture();
-
 		Vector2 metrePosition = this.getMeterPosition(true);
-		batch.draw(this.texture, metrePosition.x - this.radius, metrePosition.y - this.radius, this.radius * 2, this.radius * 2);
+
+		this.sprite.setColor(this.color);
+		this.sprite.setAlpha(this.alpha);
+		this.sprite.setPosition(metrePosition.x - this.radius, metrePosition.y - this.radius);
+		this.sprite.setSize(this.radius * 2, this.radius * 2);
+
+		this.sprite.draw(batch);
 	}
 	
 	protected void drawLabel(SpriteBatch batch) {
