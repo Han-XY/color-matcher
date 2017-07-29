@@ -129,7 +129,7 @@ public class QuizManager {
 		AnswerBall[] answerBalls = new AnswerBall[spawns];
 
 		QuestionBall questionBall = new QuestionBall(
-				random.nextInt(2) + 1, random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
+				2 + random.nextFloat(), random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
 		);
 
 		this.colorMatcher.getPlayState().addBall(questionBall);
@@ -149,7 +149,7 @@ public class QuizManager {
 
 			Color newColor = new Color(rgb[0], rgb[1], rgb[2], 1f);
 
-			answerBalls[i] = new AnswerBall(random.nextInt(2) + 1, random.nextInt(5) + 10,
+			answerBalls[i] = new AnswerBall(2 + random.nextFloat(), random.nextInt(5) + 10,
 					(float) (random.nextInt(3) + 4) / 10,
 					newColor, this.colorMatcher);
 

@@ -51,7 +51,7 @@ public abstract class Ball extends GameObject{
 	 * Initialises a pixmap for rendering the shape.
 	 */
 	private void initPixmap() {
-		this.pixmap = new Pixmap(200, 200, Pixmap.Format.RGBA8888);
+		this.pixmap = new Pixmap(50, 50, Pixmap.Format.RGBA8888);
 	}
 
 	/** Updates the shape texture with new alpha */
@@ -59,7 +59,7 @@ public abstract class Ball extends GameObject{
 		this.lastAlpha = this.alpha;
 		this.pixmap.setBlending(Blending.None);
 		this.pixmap.setColor(this.color.r, this.color.g, this.color.b, this.alpha);
-		this.pixmap.fillCircle(100, 100, 100);
+		this.pixmap.fillCircle(25, 25, 25);
 		this.texture = new Texture(this.pixmap);
 	}
 	

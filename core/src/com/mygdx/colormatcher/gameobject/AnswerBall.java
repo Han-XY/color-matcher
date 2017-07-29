@@ -15,7 +15,7 @@ import com.mygdx.colormatcher.utils.TextRenderer;
 
 public class AnswerBall extends Ball{
 
-	public AnswerBall(int x, int y, float radius, Color color, ColorMatcher colorMatcher){
+	public AnswerBall(float x, float y, float radius, Color color, ColorMatcher colorMatcher){
 		super("", x, y, radius, color, colorMatcher);
 	}
 	

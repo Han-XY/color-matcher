@@ -188,21 +188,21 @@ public class Play extends State{
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		gameViewport.apply();
+		this.gameViewport.apply();
 
-	    gameViewport.getCamera().position.set(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 0);
-		spriteBatch.setProjectionMatrix(gameViewport.getCamera().combined);
+		this.gameViewport.getCamera().position.set(this.WORLD_WIDTH / 2, this.WORLD_HEIGHT / 2, 0);
+		this.spriteBatch.setProjectionMatrix(this.gameViewport.getCamera().combined);
 
-		for(Ball b : balls){
-			spriteBatch.begin();
-			b.render(spriteBatch);
-			spriteBatch.end();
+		for(Ball ball : balls){
+			this.spriteBatch.begin();
+			ball.render(this.spriteBatch);
+			this.spriteBatch.end();
 		}
 
-		referenceUnitViewport.apply();
+		this.referenceUnitViewport.apply();
 
-		stage.act();
-		stage.draw();	
+		this.stage.act();
+		this.stage.draw();
 	}
 	
 	@Override
