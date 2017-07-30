@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.colormatcher.game.ColorMatcher;
 import com.mygdx.colormatcher.game.GameStateManager;
@@ -100,7 +101,13 @@ public class Menu extends State{
 					.push(Tween.to(buttonPlay, ActorAccessor.ALPHA, .5f).target(0))
 					.push(Tween.to(buttonExit, ActorAccessor.ALPHA, .5f).target(0))
 					.end().start(tweenManager);
-					colorMatcher.enterState(GameStateManager.StateEnum.PLAY, 40);
+
+					Timer.schedule(new Timer.Task(){
+						@Override
+						public void run(){
+							colorMatcher.enterState(GameStateManager.StateEnum.PLAY, 40);
+						}
+					}, .6f);
 				}
 			}
 		);
@@ -120,8 +127,7 @@ public class Menu extends State{
 		this.table.add(this.buttonPlay).width(290f).height(140f).pad(20f);
 		this.table.row();
 		this.table.add(this.buttonExit).width(290f).height(140f).pad(20f);
-		this.stage.addActor(this.table);
-		
+
 		this.RGBList = new int[]{255, 0, 0};
 
 		this.tweenManager = new TweenManager();
@@ -129,22 +135,24 @@ public class Menu extends State{
 		Tween.registerAccessor(Actor.class, new ActorAccessor());
 
 		this.timeline = Timeline.createSequence();
-		this.timeline.beginSequence()
-		.push(Tween.set(this.heading, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(this.buttonPlay, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(this.buttonExit, ActorAccessor.ALPHA).target(0))
-		.push(Tween.to(this.heading, ActorAccessor.ALPHA, .5f).target(1))
-		.push(Tween.to(this.buttonPlay, ActorAccessor.ALPHA, .5f).target(1))
-		.push(Tween.to(this.buttonExit, ActorAccessor.ALPHA, .5f).target(1))
-		.end().start(this.tweenManager);
 
+		this.timeline.beginSequence()
+			.push(Tween.set(this.heading, ActorAccessor.ALPHA).target(0))
+			.push(Tween.set(this.buttonPlay, ActorAccessor.ALPHA).target(0))
+			.push(Tween.set(this.buttonExit, ActorAccessor.ALPHA).target(0))
+			.push(Tween.to(this.heading, ActorAccessor.ALPHA, .5f).target(1))
+			.push(Tween.to(this.buttonPlay, ActorAccessor.ALPHA, .5f).target(1))
+			.push(Tween.to(this.buttonExit, ActorAccessor.ALPHA, .5f).target(1))
+			.end().start(this.tweenManager);
+
+		this.stage.addActor(this.table);
 	}
 
 	@Override
 	public void resize(int width, int height) {
 		this.stage.getViewport().update(width, height, true);
 	}
-	
+
 	@Override
 	public void touchDown(int x, int y, int pointer, int button){
 		if(this.stage != null){

@@ -1,5 +1,6 @@
 package com.mygdx.colormatcher.screens;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -93,6 +94,7 @@ public class Play extends State{
 	/* States */
 	private boolean gameEnded;
 	private boolean gameRestarting;
+	private boolean uiLoaded;
 
 	public Play(ColorMatcher colorMatcher){
 		super(colorMatcher);
@@ -131,15 +133,19 @@ public class Play extends State{
 		this.table.add(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height).pad(50).colspan(2);
 		this.table.row();
 		this.table.top();
+
+		this.uiLoaded = false;
+
+		Timer.schedule(new Task(){
+			@Override
+			public void run(){
+				showScore();
+				uiLoaded = true;
+			}
+		}, .5f);
+
+
 		this.stage.addActor(this.table);
-
-		if(this.timeline != null) this.timeline.kill();
-
-		this.timeline = Timeline.createSequence();
-		this.timeline.beginSequence()
-		.push(Tween.set(this.score, ActorAccessor.ALPHA).target(0))
-		.push(Tween.to(this.score, ActorAccessor.ALPHA, 1f).target(1))
-		.end().start(this.tweenManager);
 	}
 
 	@Override
@@ -201,8 +207,11 @@ public class Play extends State{
 
 		this.referenceUnitViewport.apply();
 
-		this.stage.act();
-		this.stage.draw();
+		if(uiLoaded) {
+			this.stage.act();
+			this.stage.draw();
+		}
+
 	}
 	
 	@Override
@@ -218,6 +227,27 @@ public class Play extends State{
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
 		this.score.setText(Integer.toString(this.quizManager.getScore()));
 		this.table.getCell(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height);
+	}
+
+	private void showScore() {
+		this.timeline = Timeline.createSequence();
+
+		this.timeline.beginSequence()
+				.push(Tween.set(this.score, ActorAccessor.ALPHA).target(0))
+				.push(Tween.to(this.score, ActorAccessor.ALPHA, 1f).target(1))
+				.end().start(this.tweenManager);
+	}
+
+	private void hideUI() {
+		this.timeline.kill();
+		this.timeline = Timeline.createSequence();
+		this.timeline.beginParallel()
+				.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.score, ActorAccessor.ALPHA, .5f).target(0))
+				.end().start(this.tweenManager);
 	}
 
 	/* States */
@@ -259,15 +289,7 @@ public class Play extends State{
 		this.objectsToAdd.clear();
 		this.objectsToRemove.clear();
 
-		this.timeline.kill();
-		this.timeline = Timeline.createSequence();
-		this.timeline.beginParallel()
-				.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, .5f).target(0))
-				.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, .5f).target(0))
-				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
-				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
-				.push(Tween.to(this.score, ActorAccessor.ALPHA, .5f).target(0))
-				.end().start(this.tweenManager);
+		this.hideUI();
 	}
 
 	/**
@@ -282,56 +304,59 @@ public class Play extends State{
 			@Override
 			public void run(){
 				buildEnvironment();
-				show();
+				showScore();
 				gameRestarting = false;
 			}
-		}, .5f);
+		}, 1f);
 		
 	}
 	
 	private void endGame(){
-		if(gameEnded)
+		if(this.gameEnded)
 			return;
-		gameEnded = true;
+		this.gameEnded = true;
 		
 		Array<Body> bodies = new Array<Body>();
-		
-		world.getBodies(bodies);
-		for(Body body : bodies){
-			if(wallFixtures.get(0).getBody() == body)
-				world.destroyBody(body);
-		}
-		
-		wallFixtures.clear();
 
-		glyphLayout.setText(this.colorMatcher.getFontWhite(), "game over");
-		gameOverMessage = new Label("game over", skin);
-		gameOverMessage.setFontScale(.5f);
-		table.add(gameOverMessage).width(glyphLayout.width * .5f).height(glyphLayout.height * .5f).pad(50).
+		this.world.getBodies(bodies);
+
+		for(Body body : bodies){
+			if(this.wallFixtures.get(0).getBody() == body)
+				this.world.destroyBody(body);
+		}
+
+		this.wallFixtures.clear();
+
+		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), "game over");
+		this.gameOverMessage = new Label("game over", skin);
+		this.gameOverMessage.setFontScale(.5f);
+		this.table.add(this.gameOverMessage).width(this.glyphLayout.width * .5f).height(this.glyphLayout.height * .5f).pad(50).
 		colspan(2);
+
+		this.table.row();
 		
-		table.row();
-		
-		int oldHighScore = quizManager.getHighScore();
-		quizManager.onEnd();
+		int oldHighScore = this.quizManager.getHighScore();
+		this.quizManager.onEnd();
 		
 		Json json = new Json();
 		json.setOutputType(JsonWriter.OutputType.json);
-		String jsonString = json.prettyPrint(quizManager);
+		String jsonString = json.prettyPrint(this.quizManager);
 		Gdx.files.local("data/quiz.json").writeString(jsonString, false);
 		
-		String highScoreMessage =  quizManager.getHighScore() > oldHighScore ? "new highscore - " + quizManager.getHighScore() : "highscore - " + quizManager.getHighScore();
-		glyphLayout.setText(this.colorMatcher.getFontWhite(), highScoreMessage);
-		highScoreLabel = new Label(highScoreMessage, skin);
-		highScoreLabel.setFontScale(.25f);
-		table.add(highScoreLabel).width(glyphLayout.width * .25f).height(glyphLayout.height * .25f).pad(50).colspan(2);
+		String highScoreMessage =  this.quizManager.getHighScore() > oldHighScore ? "new highscore - " +
+				this.quizManager.getHighScore() : "highscore - " + quizManager.getHighScore();
+		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), highScoreMessage);
+		this.highScoreLabel = new Label(highScoreMessage, this.skin);
+		this.highScoreLabel.setFontScale(.25f);
+		this.table.add(this.highScoreLabel).width(this.glyphLayout.width * .25f).
+				height(this.glyphLayout.height * .25f).pad(50).colspan(2);
 
-		table.row();
-		
-		buttonHome = new Button(skin);
-		buttonHome.setStyle(skin.get("buttonHome", Button.ButtonStyle.class));
+		this.table.row();
 
-		buttonHome.addListener(
+		this.buttonHome = new Button(this.skin);
+		this.buttonHome.setStyle(skin.get("buttonHome", Button.ButtonStyle.class));
+
+		this.buttonHome.addListener(
 				new ClickListener(){
 					@Override
 					public void clicked(InputEvent event, float x, float y){
@@ -343,11 +368,11 @@ public class Play extends State{
 				}
 		);
 
-		table.add(buttonHome).width(128).height(128).pad(50);
-		
-		buttonRetry = new Button(skin);
-		buttonRetry.setStyle(skin.get("buttonRetry", Button.ButtonStyle.class));
-		buttonRetry.addListener(
+		this.table.add(this.buttonHome).width(128).height(128).pad(50);
+
+		this.buttonRetry = new Button(this.skin);
+		this.buttonRetry.setStyle(this.skin.get("buttonRetry", Button.ButtonStyle.class));
+		this.buttonRetry.addListener(
 				new ClickListener(){
 					@Override
 					public void clicked(InputEvent event, float x, float y){
@@ -358,22 +383,22 @@ public class Play extends State{
 					}
 				}
 		);
-		table.add(buttonRetry).width(128).height(128).pad(50);
-		
-		timeline.kill();
-		
-		timeline = Timeline.createSequence();
-		timeline.beginSequence()
-		.push(Tween.set(gameOverMessage, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(highScoreLabel, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(buttonHome, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(buttonRetry, ActorAccessor.ALPHA).target(0))
-		.push(Tween.to(gameOverMessage, ActorAccessor.ALPHA, 1f).target(1))
-		.push(Tween.to(highScoreLabel, ActorAccessor.ALPHA, 1f).target(1))
+		this.table.add(this.buttonRetry).width(128).height(128).pad(50);
+
+		this.timeline.kill();
+
+		this.timeline = Timeline.createSequence();
+		this.timeline.beginSequence()
+		.push(Tween.set(this.gameOverMessage, ActorAccessor.ALPHA).target(0))
+		.push(Tween.set(this.highScoreLabel, ActorAccessor.ALPHA).target(0))
+		.push(Tween.set(this.buttonHome, ActorAccessor.ALPHA).target(0))
+		.push(Tween.set(this.buttonRetry, ActorAccessor.ALPHA).target(0))
+		.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, 1f).target(1))
+		.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, 1f).target(1))
 		.beginParallel()
-		.push(Tween.to(buttonHome, ActorAccessor.ALPHA, 1f).target(1))
-		.push(Tween.to(buttonRetry, ActorAccessor.ALPHA, 1f).target(1))
-		.end().start(tweenManager);
+		.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, 1f).target(1))
+		.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, 1f).target(1))
+		.end().start(this.tweenManager);
 		
 	}
 	
