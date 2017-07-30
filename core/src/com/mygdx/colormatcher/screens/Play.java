@@ -144,7 +144,6 @@ public class Play extends State{
 
 	@Override
 	public void update(float delta) {
-
 		this.objectCreationCooldown --;
 
 		/* Adds objects in queue to the world, if cooldown is over */

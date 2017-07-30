@@ -21,7 +21,7 @@ public class RedBall extends Ball{
 	@Override
 	public void init() {
 		this.bodyDef = new BodyDef();
-		this.bodyDef.type = BodyType.StaticBody;
+		this.bodyDef.type = BodyType.DynamicBody;
 		this.bodyDef.position.set(new Vector2(x, y));
 
 		this.shape = new CircleShape();
@@ -50,8 +50,6 @@ public class RedBall extends Ball{
 	@Override
 	public void update() {
 		super.update();
-
-		this.updateCreationAnimation();
 	}
 	
 	@Override

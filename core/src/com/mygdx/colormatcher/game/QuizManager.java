@@ -1,10 +1,10 @@
 package com.mygdx.colormatcher.game;
 import java.util.*;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.mygdx.colormatcher.gameobject.AnswerBall;
 import com.mygdx.colormatcher.gameobject.Ball;
 import com.mygdx.colormatcher.gameobject.QuestionBall;
-import com.mygdx.colormatcher.gameobject.RedBall;
 
 /**
  * Sets the quiz problems, and checks if answers are right
@@ -16,6 +16,7 @@ public class QuizManager {
 	private int timer;
 	private boolean gameEnded;
 
+
 	private final int QUESTION_DURATION = 200;
 
 	/** The theme color for the game. */
@@ -25,6 +26,9 @@ public class QuizManager {
 
 	/** Keep transient to avoid circular references being serialised */
 	private transient ColorMatcher colorMatcher;
+
+	/** Keep transient because cannot be serialised */
+	private transient Random random;
 
 	/** Stores all the questions so far. The correct answer is always the 0th element of the answer array. */
 	private transient Map<QuestionBall, ArrayList<AnswerBall>> problems;
@@ -86,7 +90,7 @@ public class QuizManager {
 
 		this.score += 1;
 
-		this.colorMatcher.getSoundManager().playSound(new Random().nextInt(3) + 1);
+		this.colorMatcher.getSoundManager().playSound(this.random.nextInt(3) + 1);
 
 	}
 
@@ -100,14 +104,16 @@ public class QuizManager {
 
 		if(answerBallArrayList == null) return;
 
-		AnswerBall answer = answerBallArrayList.get(new Random().nextInt(answerBallArrayList.size()));
+		Vector2 metrePosition = answerBall.getMeterPosition(true);
 
-		for(int i = 0; i < new Random().nextInt(2) + 1; i ++){
+		for(int i = 0; i < this.random.nextInt(2) + 1; i ++){
 
-			this.colorMatcher.getPlayState().addBall(
-					new RedBall(answer.getMeterPosition(true).x, answer.getMeterPosition(true).y,
-							.3f, this.colorMatcher)
-			);
+			AnswerBall copy = new AnswerBall(metrePosition.x, metrePosition.y + this.random.nextFloat() * .1f,
+					answerBall.getRadius(), answerBall.getColor(), answerBall.getGeneration() + 1, this.colorMatcher);
+
+			this.colorMatcher.getPlayState().addBall(copy);
+
+			answerBallArrayList.add(copy);
 
 		}
 
@@ -120,19 +126,17 @@ public class QuizManager {
 	 */
 	private void onNextQuestion(){
 
-		Random random = new Random();
-
-		int spawns = random.nextInt(3) + 3;
+		int spawns = this.random.nextInt(3) + 3;
 
 		AnswerBall[] answerBalls = new AnswerBall[spawns];
 
 		QuestionBall questionBall = new QuestionBall(
-				2 + random.nextFloat(), random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
+				2 + this.random.nextFloat(), this.random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
 		);
 
 		this.colorMatcher.getPlayState().addBall(questionBall);
 
-		boolean[] directions = new boolean[]{random.nextBoolean(), random.nextBoolean(), random.nextBoolean()};
+		boolean[] directions = new boolean[]{this.random.nextBoolean(), this.random.nextBoolean(), this.random.nextBoolean()};
 
 		for(int i = 0; i < spawns; i ++) {
 
@@ -147,9 +151,9 @@ public class QuizManager {
 
 			Color newColor = new Color(rgb[0], rgb[1], rgb[2], 1f);
 
-			answerBalls[i] = new AnswerBall(2 + random.nextFloat(), random.nextInt(5) + 10,
-					(float) (random.nextInt(3) + 4) / 10,
-					newColor, this.colorMatcher);
+			answerBalls[i] = new AnswerBall(2 + this.random.nextFloat(), this.random.nextInt(5) + 10,
+					(float) (this.random.nextInt(3) + 4) / 10,
+					newColor, 0, this.colorMatcher);
 
 			this.colorMatcher.getPlayState().addBall(answerBalls[i]);
 
@@ -211,7 +215,8 @@ public class QuizManager {
 		this.score = 0;
 		this.gameEnded = false;
 
-		Random random = new Random();
+		this.random = new Random();
+
 		this.color = new Color(
 				.2f + random.nextFloat() * .8f,
 				.2f + random.nextFloat() * .8f,

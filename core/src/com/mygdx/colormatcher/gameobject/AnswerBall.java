@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -13,10 +14,33 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.mygdx.colormatcher.game.ColorMatcher;
 import com.mygdx.colormatcher.utils.TextRenderer;
 
+import java.util.Random;
+
 public class AnswerBall extends Ball{
 
-	public AnswerBall(float x, float y, float radius, Color color, ColorMatcher colorMatcher){
+	private static float permanentChance = .5f;
+
+	private int generation;
+
+	public AnswerBall(float x, float y, float radius, Color color, int generation, ColorMatcher colorMatcher){
 		super("", x, y, radius, color, colorMatcher);
+
+		this.generation = generation;
+
+		if(generation <= 0) return;
+
+		this.setRadius();
+	}
+
+	/**
+	 * Sets the radius of this answer-ball based on its generation number. Higher generation ones are larger.
+	 */
+	private void setRadius() {
+
+		this.radius *= 1 + this.generation / 10f;
+
+		if(this.radius > 2.5f) this.radius = 2.5f;
+
 	}
 	
 	@Override
@@ -50,11 +74,16 @@ public class AnswerBall extends Ball{
 	@Override
 	public void update() {
 		super.update();
+		this.updateCreationAnimation();
 		this.updateDeathAnimation();
 	}
 
 	@Override
 	public void dispose() {
 
+	}
+
+	public int getGeneration() {
+		return this.generation;
 	}
 }

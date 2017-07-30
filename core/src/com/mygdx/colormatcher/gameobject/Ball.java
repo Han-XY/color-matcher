@@ -27,6 +27,7 @@ public abstract class Ball extends GameObject{
 	protected float radius;
 	protected float tempRadius; //stores the original radius while the radius is being modified.
 	protected int aliveTime;
+	protected boolean isPermanent;
 
 	/* Rendering */
 	protected static Pixmap pixmap;
@@ -36,10 +37,10 @@ public abstract class Ball extends GameObject{
 	protected Sprite sprite;
 
 	static {
-		pixmap = new Pixmap(10, 10, Pixmap.Format.RGBA8888);
+		pixmap = new Pixmap(500, 500, Pixmap.Format.RGBA8888);
 		pixmap.setBlending(Blending.None);
 		pixmap.setColor(1f, 1f, 1f, 1f);
-		pixmap.fillCircle(5, 5, 5);
+		pixmap.fillCircle(250, 250, 250);
 		texture = new Texture(pixmap);
 	}
 
@@ -59,10 +60,6 @@ public abstract class Ball extends GameObject{
 	@Override
 	public void update(){
 		this.aliveTime ++;
-	}
-
-	public float getRadius(){
-		return this.radius;
 	}
 
 	public void destroy(){
@@ -115,13 +112,15 @@ public abstract class Ball extends GameObject{
 	}
 
 	protected void updateCreationAnimation() {
+		if(this.radius == this.tempRadius) return;
+
 		if(this.tempRadius == 0) {
 			this.tempRadius = this.radius;
 			this.radius *= .2f;
 			this.alpha = .2f;
 		}
 
-		this.radius *= 1.3f;
+		this.radius *= 1.2f;
 		this.alpha += .1f;
 
 		if(this.radius >= this.tempRadius) {
@@ -134,14 +133,15 @@ public abstract class Ball extends GameObject{
 	 * Updates the death animation of the ball.
 	 */
 	protected void updateDeathAnimation() {
-		if(this.dead){
-			this.radius *= 1.1f;
-			this.alpha -= .1f;
 
-			this.deathTimer --;
-			if(this.deathTimer <= 0)
-				this.shouldRemove = true;
-		}
+		if(!this.dead) return;
+
+		this.radius *= 1.1f;
+		this.alpha -= .1f;
+
+		this.deathTimer --;
+
+		this.shouldRemove = this.deathTimer <= 0;
 	}
 
 	@Override
@@ -155,5 +155,13 @@ public abstract class Ball extends GameObject{
 		super.removeFromWorld();
 		this.colorMatcher.getPlayState().getBalls().remove(this);
 	}
-		
+
+	public float getRadius(){
+		return this.radius;
+	}
+
+	public Color getColor() {
+		return this.color;
+	}
+
 }
