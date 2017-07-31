@@ -102,7 +102,7 @@ public class Play extends State{
 		this.world = new World(new Vector2(0, -9.81f), true);
 
 		this.quizManager = new Json().fromJson(QuizManager.class, Gdx.files.internal("data/quiz.json"));
-		this.quizManager.initAfterLoad(colorMatcher);
+		this.quizManager.onLoad(colorMatcher);
 
 		this.objectsToAdd = new LinkedList<GameObject>();
 		this.objectsToRemove = new LinkedList<GameObject>();
@@ -128,7 +128,7 @@ public class Play extends State{
 		this.glyphLayout = new GlyphLayout();
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
 		this.labelScore = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
-		this.labelScore.setColor(this.quizManager.getColor());
+		this.labelScore.setColor(this.quizManager.getMainColor());
 
 		this.table.add(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height).pad(100).colspan(2);
 		this.table.row();
@@ -269,7 +269,7 @@ public class Play extends State{
 		this.labelScore.setText(Integer.toString(this.quizManager.getScore()));
 		this.table.getCell(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height);
 
-		Color gameColor = this.quizManager.getColor();
+		Color gameColor = this.quizManager.getMainColor();
 		Color labelColor = labelScore.getColor();
 
 		float[] rgbGame = new float[]{gameColor.r, gameColor.g, gameColor.b};
@@ -281,7 +281,10 @@ public class Play extends State{
 
 		}
 
-		this.labelScore.setColor(rgbLabel[0], rgbLabel[1], rgbLabel[2], .8f);
+		float labelScoreAlpha = this.labelScore.getColor().a;
+
+		this.labelScore.setColor(rgbLabel[0], rgbLabel[1], rgbLabel[2], labelScoreAlpha == 1f || labelScoreAlpha == .8f
+				? .8f : labelScoreAlpha);
 	}
 
 	private void tweenShowScore() {

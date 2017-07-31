@@ -21,6 +21,7 @@ public class QuizManager {
 
 	/** The theme color for the game. */
 	private Color color;
+	private Color mainColor;
 	private float segments;
 	private final float MAX_SEGMENTS = 100f;
 
@@ -125,6 +126,7 @@ public class QuizManager {
 	 * Moves onto the next question, choosing the question color properties and queueing them to be added to the game.
 	 */
 	private void onNextQuestion(){
+		this.mainColor = this.color;
 
 		int spawns = this.random.nextInt(3) + 3;
 
@@ -166,7 +168,6 @@ public class QuizManager {
 		this.segments *= 1.1f;
 
 		if(this.segments > this.MAX_SEGMENTS) this.segments = this.MAX_SEGMENTS;
-
 	}
 
 	/* Utilities */
@@ -208,6 +209,16 @@ public class QuizManager {
 	/* State management */
 
 	/**
+	 * Called when the quiz manager is loaded.
+	 */
+	public void onLoad(ColorMatcher colorMatcher) {
+		this.colorMatcher = colorMatcher;
+		this.problems = new HashMap<QuestionBall, ArrayList<AnswerBall>>();
+		this.color = new Color(1f, 1f, 1f, 1f);
+		this.mainColor = this.color;
+	}
+
+	/**
 	 * Called when the quiz starts.
 	 */
 	public void onStart(){
@@ -224,8 +235,9 @@ public class QuizManager {
 				1f
 		);
 
-		this.segments = 10;
+		this.mainColor = this.color;
 
+		this.segments = 10;
 	}
 
 	/**
@@ -241,11 +253,6 @@ public class QuizManager {
 
 	/* Setters and getters */
 
-	public void initAfterLoad(ColorMatcher colorMatcher) {
-		this.colorMatcher = colorMatcher;
-		this.problems = new HashMap<QuestionBall, ArrayList<AnswerBall>>();
-	}
-
 	public int getScore(){
 		return this.score;
 	}
@@ -254,7 +261,7 @@ public class QuizManager {
 		return this.highScore;
 	}
 
-	public Color getColor() {
-		return this.color;
+	public Color getMainColor() {
+		return this.mainColor;
 	}
 }
