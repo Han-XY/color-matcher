@@ -131,7 +131,7 @@ public class QuizManager {
 		AnswerBall[] answerBalls = new AnswerBall[spawns];
 
 		QuestionBall questionBall = new QuestionBall(
-				2 + this.random.nextFloat(), this.random.nextInt(5) + 10, 1f, this.color, this.colorMatcher
+				2 + this.random.nextFloat(), this.random.nextInt(3) + 8, 1f, this.color, this.colorMatcher
 		);
 
 		this.colorMatcher.getPlayState().addBall(questionBall);
@@ -151,7 +151,7 @@ public class QuizManager {
 
 			Color newColor = new Color(rgb[0], rgb[1], rgb[2], 1f);
 
-			answerBalls[i] = new AnswerBall(2 + this.random.nextFloat(), this.random.nextInt(5) + 10,
+			answerBalls[i] = new AnswerBall(2 + this.random.nextFloat(), this.random.nextInt(3) + 8,
 					(float) (this.random.nextInt(3) + 4) / 10,
 					newColor, 0, this.colorMatcher);
 
@@ -212,7 +212,7 @@ public class QuizManager {
 	 */
 	public void onStart(){
 		this.timer = 10;
-		this.score = 0;
+		this.score = 100;
 		this.gameEnded = false;
 
 		this.random = new Random();
