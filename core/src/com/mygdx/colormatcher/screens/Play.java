@@ -1,6 +1,5 @@
 package com.mygdx.colormatcher.screens;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,6 +28,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -93,8 +93,6 @@ public class Play extends State{
 
 	/* States */
 	private boolean gameEnded;
-	private boolean gameRestarting;
-	private boolean uiLoaded;
 
 	public Play(ColorMatcher colorMatcher){
 		super(colorMatcher);
@@ -134,16 +132,56 @@ public class Play extends State{
 		this.table.row();
 		this.table.top();
 
-		this.uiLoaded = false;
+		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), "game over");
+		this.gameOverMessage = new Label("game over", skin);
+		this.gameOverMessage.setFontScale(.5f);
+		this.table.add(this.gameOverMessage).width(this.glyphLayout.width * .5f).height(this.glyphLayout.height * .5f).pad(50).
+				colspan(2);
 
-		Timer.schedule(new Task(){
-			@Override
-			public void run(){
-				showScore();
-				uiLoaded = true;
-			}
-		}, .5f);
+		this.table.row();
 
+		this.highScoreLabel = new Label("", this.skin);
+		this.table.add(this.highScoreLabel);
+
+		this.table.row();
+
+		this.buttonHome = new Button(this.skin);
+		this.buttonHome.setStyle(skin.get("buttonHome", Button.ButtonStyle.class));
+
+		this.buttonHome.addListener(
+				new ClickListener(){
+					@Override
+					public void clicked(InputEvent event, float x, float y){
+						if(isTransitioning)
+							return;
+						colorMatcher.getSoundManager().playSound(0);
+						colorMatcher.enterState(GameStateManager.StateEnum.MENU, 40);
+					}
+				}
+		);
+
+		this.table.add(this.buttonHome).width(128).height(128).pad(50);
+
+		this.buttonRetry = new Button(this.skin);
+		this.buttonRetry.setStyle(this.skin.get("buttonRetry", Button.ButtonStyle.class));
+
+		this.buttonRetry.addListener(
+				new ClickListener(){
+					@Override
+					public void clicked(InputEvent event, float x, float y){
+						colorMatcher.getSoundManager().playSound(0);
+						retry();
+					}
+				}
+		);
+		this.table.add(this.buttonRetry).width(128).height(128).pad(50);
+
+		this.togglePostGameUiVisibility(false);
+		this.togglePostGameUiFunctionality(false);
+
+		this.tweenShowScore();
+
+		this.applyUiDelay();
 
 		this.stage.addActor(this.table);
 	}
@@ -207,11 +245,7 @@ public class Play extends State{
 
 		this.referenceUnitViewport.apply();
 
-		if(uiLoaded) {
-			this.stage.act();
-			this.stage.draw();
-		}
-
+		super.render(delta);
 	}
 	
 	@Override
@@ -229,16 +263,16 @@ public class Play extends State{
 		this.table.getCell(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height);
 	}
 
-	private void showScore() {
+	private void tweenShowScore() {
 		this.timeline = Timeline.createSequence();
 
 		this.timeline.beginSequence()
 				.push(Tween.set(this.score, ActorAccessor.ALPHA).target(0))
-				.push(Tween.to(this.score, ActorAccessor.ALPHA, 1f).target(1))
+				.push(Tween.to(this.score, ActorAccessor.ALPHA, 1.5f).target(1))
 				.end().start(this.tweenManager);
 	}
 
-	private void hideUI() {
+	private void tweenHideAllUi() {
 		this.timeline.kill();
 		this.timeline = Timeline.createSequence();
 		this.timeline.beginParallel()
@@ -247,6 +281,21 @@ public class Play extends State{
 				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
 				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
 				.push(Tween.to(this.score, ActorAccessor.ALPHA, .5f).target(0))
+				.end().start(this.tweenManager);
+	}
+
+	private void tweenShowPostGameUI() {
+		this.timeline = Timeline.createSequence();
+		this.timeline.beginSequence()
+				.push(Tween.set(this.gameOverMessage, ActorAccessor.ALPHA).target(0))
+				.push(Tween.set(this.highScoreLabel, ActorAccessor.ALPHA).target(0))
+				.push(Tween.set(this.buttonHome, ActorAccessor.ALPHA).target(0))
+				.push(Tween.set(this.buttonRetry, ActorAccessor.ALPHA).target(0))
+				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, 1f).target(1))
+				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, 1f).target(1))
+				.beginParallel()
+				.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, 1f).target(1))
+				.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, 1f).target(1))
 				.end().start(this.tweenManager);
 	}
 
@@ -289,24 +338,30 @@ public class Play extends State{
 		this.objectsToAdd.clear();
 		this.objectsToRemove.clear();
 
-		this.hideUI();
+		this.tweenHideAllUi();
 	}
 
 	/**
 	 * Retries the game.
 	 */
 	private void retry(){
-		this.gameRestarting = true;
-
 		this.destroyEnvironment();
+
+		this.togglePostGameUiFunctionality(false);
 		
 		Timer.schedule(new Task(){
+
 			@Override
 			public void run(){
+
 				buildEnvironment();
-				showScore();
-				gameRestarting = false;
+
+				tweenShowScore();
+
+				togglePostGameUiVisibility(false);
+
 			}
+
 		}, 1f);
 		
 	}
@@ -314,6 +369,7 @@ public class Play extends State{
 	private void endGame(){
 		if(this.gameEnded)
 			return;
+
 		this.gameEnded = true;
 		
 		Array<Body> bodies = new Array<Body>();
@@ -327,79 +383,38 @@ public class Play extends State{
 
 		this.wallFixtures.clear();
 
-		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), "game over");
-		this.gameOverMessage = new Label("game over", skin);
-		this.gameOverMessage.setFontScale(.5f);
-		this.table.add(this.gameOverMessage).width(this.glyphLayout.width * .5f).height(this.glyphLayout.height * .5f).pad(50).
-		colspan(2);
+		this.timeline.kill();
 
-		this.table.row();
-		
 		int oldHighScore = this.quizManager.getHighScore();
 		this.quizManager.onEnd();
-		
+
 		Json json = new Json();
 		json.setOutputType(JsonWriter.OutputType.json);
 		String jsonString = json.prettyPrint(this.quizManager);
 		Gdx.files.local("data/quiz.json").writeString(jsonString, false);
-		
+
 		String highScoreMessage =  this.quizManager.getHighScore() > oldHighScore ? "new highscore - " +
 				this.quizManager.getHighScore() : "highscore - " + quizManager.getHighScore();
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), highScoreMessage);
-		this.highScoreLabel = new Label(highScoreMessage, this.skin);
+		this.highScoreLabel.setText(highScoreMessage);
 		this.highScoreLabel.setFontScale(.25f);
-		this.table.add(this.highScoreLabel).width(this.glyphLayout.width * .25f).
+		this.table.getCell(this.highScoreLabel).width(this.glyphLayout.width * .25f).
 				height(this.glyphLayout.height * .25f).pad(50).colspan(2);
 
-		this.table.row();
+		this.tweenShowPostGameUI();
 
-		this.buttonHome = new Button(this.skin);
-		this.buttonHome.setStyle(skin.get("buttonHome", Button.ButtonStyle.class));
+		this.togglePostGameUiVisibility(true);
 
-		this.buttonHome.addListener(
-				new ClickListener(){
-					@Override
-					public void clicked(InputEvent event, float x, float y){
-						if(transitioning)
-							return;
-						colorMatcher.getSoundManager().playSound(0);
-						colorMatcher.enterState(GameStateManager.StateEnum.MENU, 40);
-					}
-				}
-		);
+		Timer.schedule(new Task(){
 
-		this.table.add(this.buttonHome).width(128).height(128).pad(50);
+			@Override
+			public void run(){
 
-		this.buttonRetry = new Button(this.skin);
-		this.buttonRetry.setStyle(this.skin.get("buttonRetry", Button.ButtonStyle.class));
-		this.buttonRetry.addListener(
-				new ClickListener(){
-					@Override
-					public void clicked(InputEvent event, float x, float y){
-						if(gameRestarting)
-							return;
-						colorMatcher.getSoundManager().playSound(0);
-						retry();
-					}
-				}
-		);
-		this.table.add(this.buttonRetry).width(128).height(128).pad(50);
+				togglePostGameUiFunctionality(true);
 
-		this.timeline.kill();
+			}
 
-		this.timeline = Timeline.createSequence();
-		this.timeline.beginSequence()
-		.push(Tween.set(this.gameOverMessage, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(this.highScoreLabel, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(this.buttonHome, ActorAccessor.ALPHA).target(0))
-		.push(Tween.set(this.buttonRetry, ActorAccessor.ALPHA).target(0))
-		.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, 1f).target(1))
-		.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, 1f).target(1))
-		.beginParallel()
-		.push(Tween.to(this.buttonHome, ActorAccessor.ALPHA, 1f).target(1))
-		.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, 1f).target(1))
-		.end().start(this.tweenManager);
-		
+		}, 3f);
 	}
 	
 	@Override 
@@ -438,6 +453,19 @@ public class Play extends State{
 		fixtureDef.shape = wall3;
 		wallFixtures.add(world.createBody(wallDef).createFixture(fixtureDef));
 		wallFixtures.get(2).setUserData(new float[]{0, WORLD_HEIGHT});
+	}
+
+	private void togglePostGameUiVisibility(boolean on) {
+		this.gameOverMessage.setVisible(on);
+		this.highScoreLabel.setVisible(on);
+		this.buttonHome.setVisible(on);
+		this.buttonRetry.setVisible(on);
+	}
+
+	private void togglePostGameUiFunctionality(boolean on) {
+		Touchable touchable = on ? Touchable.enabled : Touchable.disabled;
+		this.buttonHome.setTouchable(touchable);
+		this.buttonRetry.setTouchable(touchable);
 	}
 
 	/* Units and conversions */

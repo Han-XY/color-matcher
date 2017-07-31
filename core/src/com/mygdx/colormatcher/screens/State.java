@@ -4,13 +4,12 @@ import aurelienribon.tweenengine.Timeline;
 import aurelienribon.tweenengine.TweenManager;
 
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.Timer;
 import com.mygdx.colormatcher.game.ColorMatcher;
 
 public abstract class State implements Screen{
@@ -21,10 +20,11 @@ public abstract class State implements Screen{
 	protected Table table;
 	protected TweenManager tweenManager;
 	protected SpriteBatch spriteBatch;
-	protected boolean transitioning;
+	protected boolean isTransitioning;
 	protected Timeline timeline;
-	public static Viewport viewport;
 	protected ColorMatcher colorMatcher;
+
+	protected boolean canDrawUI;
 
 	public State(ColorMatcher colorMatcher) {
 		this.colorMatcher = colorMatcher;
@@ -39,7 +39,10 @@ public abstract class State implements Screen{
 
 	@Override
 	public void render(float delta) {
-		
+		if(this.canDrawUI) {
+			this.stage.act(delta);
+			this.stage.draw();
+		}
 	}
 
 	@Override
@@ -69,20 +72,22 @@ public abstract class State implements Screen{
 	public void onExit(){
 		
 	}
-	
+
 	@Override
 	public void dispose() {
-		stage.dispose();
-		skin.dispose();
-		atlas.dispose();
+		this.stage.dispose();
+		this.skin.dispose();
+		this.atlas.dispose();
 	}
 	
 	public void touchDown(int x, int y, int pointer, int button){
 		
 	}
+
 	public void touchUp(int x, int y, int pointer, int button){
 		
 	}
+
 	public void touchDragged(int x, int y, int pointer){
 		
 	}
@@ -90,8 +95,22 @@ public abstract class State implements Screen{
 		
 	}
 	
-	public void setTransitioning(boolean b){
-		transitioning = b;
+	public void setTransitioning(boolean isTransitioning){
+		this.isTransitioning = isTransitioning;
+	}
+
+	/**
+	 * Begins a delay to prevent the UI from being drawn until the delay ends.
+	 */
+	protected void applyUiDelay() {
+		this.canDrawUI = false;
+
+		Timer.schedule(new Timer.Task(){
+			@Override
+			public void run(){
+				canDrawUI = true;
+			}
+		}, .05f);
 	}
 
 }
