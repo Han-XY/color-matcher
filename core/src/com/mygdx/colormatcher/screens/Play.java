@@ -10,6 +10,7 @@ import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenManager;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -78,7 +79,7 @@ public class Play extends State{
 	private final int OBJECT_CREATION_COOLDOWN = 3;
 
 	/* UI */
-	private Label score;
+	private Label labelScore;
 	private GlyphLayout glyphLayout;
 	private Label gameOverMessage;
 	private Label highScoreLabel;
@@ -126,9 +127,10 @@ public class Play extends State{
 
 		this.glyphLayout = new GlyphLayout();
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
-		this.score = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
+		this.labelScore = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
+		this.labelScore.setColor(this.quizManager.getColor());
 
-		this.table.add(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height).pad(50).colspan(2);
+		this.table.add(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height).pad(100).colspan(2);
 		this.table.row();
 		this.table.top();
 
@@ -232,6 +234,9 @@ public class Play extends State{
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glBlendFunc(GL20.GL_DST_ALPHA, GL20.GL_ZERO);
+
 		this.gameViewport.apply();
 
 		this.gameViewport.getCamera().position.set(this.WORLD_WIDTH / 2, this.WORLD_HEIGHT / 2, 0);
@@ -246,6 +251,8 @@ public class Play extends State{
 		this.referenceUnitViewport.apply();
 
 		super.render(delta);
+
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 	
 	@Override
@@ -255,20 +262,34 @@ public class Play extends State{
 	}
 
 	/**
-	 * Updates the UI with the latest score.
+	 * Updates the UI with the latest labelScore.
 	 */
 	private void updateUI() {
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
-		this.score.setText(Integer.toString(this.quizManager.getScore()));
-		this.table.getCell(this.score).width(this.glyphLayout.width).height(this.glyphLayout.height);
+		this.labelScore.setText(Integer.toString(this.quizManager.getScore()));
+		this.table.getCell(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height);
+
+		Color gameColor = this.quizManager.getColor();
+		Color labelColor = labelScore.getColor();
+
+		float[] rgbGame = new float[]{gameColor.r, gameColor.g, gameColor.b};
+		float[] rgbLabel = new float[]{labelColor.r, labelColor.g, labelColor.b};
+
+		for(int i = 0; i < 3; i ++) {
+
+			rgbLabel[i] += (rgbGame[i] - rgbLabel[i]) / 12;
+
+		}
+
+		this.labelScore.setColor(rgbLabel[0], rgbLabel[1], rgbLabel[2], .8f);
 	}
 
 	private void tweenShowScore() {
 		this.timeline = Timeline.createSequence();
 
 		this.timeline.beginSequence()
-				.push(Tween.set(this.score, ActorAccessor.ALPHA).target(0))
-				.push(Tween.to(this.score, ActorAccessor.ALPHA, 1.5f).target(1))
+				.push(Tween.set(this.labelScore, ActorAccessor.ALPHA).target(0))
+				.push(Tween.to(this.labelScore, ActorAccessor.ALPHA, 2f).target(1))
 				.end().start(this.tweenManager);
 	}
 
@@ -280,7 +301,7 @@ public class Play extends State{
 				.push(Tween.to(this.buttonRetry, ActorAccessor.ALPHA, .5f).target(0))
 				.push(Tween.to(this.gameOverMessage, ActorAccessor.ALPHA, .5f).target(0))
 				.push(Tween.to(this.highScoreLabel, ActorAccessor.ALPHA, .5f).target(0))
-				.push(Tween.to(this.score, ActorAccessor.ALPHA, .5f).target(0))
+				.push(Tween.to(this.labelScore, ActorAccessor.ALPHA, .5f).target(0))
 				.end().start(this.tweenManager);
 	}
 

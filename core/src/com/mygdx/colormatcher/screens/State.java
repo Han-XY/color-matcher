@@ -110,7 +110,7 @@ public abstract class State implements Screen{
 			public void run(){
 				canDrawUI = true;
 			}
-		}, .05f);
+		}, .15f);
 	}
 
 }

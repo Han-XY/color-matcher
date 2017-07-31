@@ -211,7 +211,7 @@ public class QuizManager {
 	 * Called when the quiz starts.
 	 */
 	public void onStart(){
-		this.timer = 10;
+		this.timer = 50;
 		this.score = 100;
 		this.gameEnded = false;
 
@@ -254,4 +254,7 @@ public class QuizManager {
 		return this.highScore;
 	}
 
+	public Color getColor() {
+		return this.color;
+	}
 }

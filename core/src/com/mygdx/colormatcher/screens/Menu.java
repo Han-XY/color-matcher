@@ -105,7 +105,7 @@ public class Menu extends State{
 				.push(Tween.set(this.heading, ActorAccessor.ALPHA).target(0))
 				.push(Tween.set(this.buttonPlay, ActorAccessor.ALPHA).target(0))
 				.push(Tween.set(this.buttonExit, ActorAccessor.ALPHA).target(0))
-				.push(Tween.to(this.heading, ActorAccessor.ALPHA, 2f).target(1))
+				.push(Tween.to(this.heading, ActorAccessor.ALPHA, 1.8f).target(1))
 				.push(Tween.to(this.buttonPlay, ActorAccessor.ALPHA, .5f).target(1))
 				.push(Tween.to(this.buttonExit, ActorAccessor.ALPHA, .5f).target(1))
 				.end().start(this.tweenManager);
@@ -117,14 +117,14 @@ public class Menu extends State{
 			public void run(){
 				buttonPlay.setTouchable(Touchable.enabled);
 			}
-		}, 2.5f);
+		}, 2f);
 
 		Timer.schedule(new Timer.Task(){
 			@Override
 			public void run(){
 				buttonExit.setTouchable(Touchable.enabled);
 			}
-		}, 3f);
+		}, 2.5f);
 
 
 		this.stage.addActor(this.table);
