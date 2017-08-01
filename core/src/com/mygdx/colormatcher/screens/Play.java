@@ -73,6 +73,9 @@ public class Play extends State{
 	
 	private ArrayList<Ball> balls;
 
+	private Table tutorialTable;
+	private Stage tutorialStage;
+
 	/* For queuing object addition/removal */
 	private Queue<GameObject> objectsToAdd;
 	private Queue<GameObject> objectsToRemove;
@@ -85,6 +88,7 @@ public class Play extends State{
 	private Label highScoreLabel;
 	private Button buttonHome;
 	private Button buttonRetry;
+	private Label tutorialMessage;
 
 	/* Necessary to prevent lag */
 	private int objectCreationCooldown;
@@ -130,7 +134,13 @@ public class Play extends State{
 		this.labelScore = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
 		this.labelScore.setColor(this.quizManager.getMainColor());
 
-		this.table.add(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height).pad(100).colspan(2);
+		float scoreLabelScale = .8f;
+
+		this.labelScore.setFontScale(scoreLabelScale);
+
+		this.table.add(this.labelScore).width(this.glyphLayout.width * scoreLabelScale)
+				.height(this.glyphLayout.height * scoreLabelScale).pad(100).colspan(2);
+
 		this.table.row();
 		this.table.top();
 
@@ -162,7 +172,7 @@ public class Play extends State{
 				}
 		);
 
-		this.table.add(this.buttonHome).width(128).height(128).pad(50);
+		this.table.add(this.buttonHome).width(120).height(120).pad(50);
 
 		this.buttonRetry = new Button(this.skin);
 		this.buttonRetry.setStyle(this.skin.get("buttonRetry", Button.ButtonStyle.class));
@@ -181,9 +191,12 @@ public class Play extends State{
 		this.togglePostGameUiVisibility(false);
 		this.togglePostGameUiFunctionality(false);
 
-		this.tweenShowScore();
+		this.tweenShowGameUi();
 
 		this.applyUiDelay();
+
+		if(this.quizManager.isDoTutorial()) this.setTutorial();
+
 
 		this.stage.addActor(this.table);
 	}
@@ -252,6 +265,8 @@ public class Play extends State{
 
 		super.render(delta);
 
+		if(this.canDrawUI && this.tutorialTable != null) this.tutorialStage.draw();
+
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 	
@@ -267,7 +282,7 @@ public class Play extends State{
 	private void updateUI() {
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
 		this.labelScore.setText(Integer.toString(this.quizManager.getScore()));
-		this.table.getCell(this.labelScore).width(this.glyphLayout.width).height(this.glyphLayout.height);
+		this.table.getCell(this.labelScore).width(this.glyphLayout.width * .8f).height(this.glyphLayout.height * .8f);
 
 		Color gameColor = this.quizManager.getMainColor();
 		Color labelColor = labelScore.getColor();
@@ -287,7 +302,44 @@ public class Play extends State{
 				? .8f : labelScoreAlpha);
 	}
 
-	private void tweenShowScore() {
+	private void setTutorial() {
+		this.tutorialTable = new Table(this.skin);
+		this.tutorialStage = new Stage(this.referenceUnitViewport);
+
+		String message = "  click on the small\nball with the closest\ncolor to the big one";
+
+		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), "click on the small circle");
+		this.tutorialMessage = new Label(message, this.skin);
+		this.tutorialMessage.setFontScale(.3f);
+
+		this.tutorialTable.addActor(this.tutorialMessage);
+		this.tutorialStage.addActor(this.tutorialTable);
+
+		this.timeline = Timeline.createSequence();
+
+		this.timeline.beginSequence()
+				.push(Tween.set(this.tutorialMessage, ActorAccessor.ALPHA).target(0))
+				.push(Tween.to(this.tutorialMessage, ActorAccessor.ALPHA, 2f).target(1))
+				.end().start(this.tweenManager);
+
+
+		Timer.schedule(new Task(){
+
+			@Override
+			public void run(){
+
+			timeline = Timeline.createSequence();
+
+			timeline.beginSequence()
+					.push(Tween.to(tutorialMessage, ActorAccessor.ALPHA, 2f).target(0))
+					.end().start(tweenManager);
+
+			}
+
+		}, 4f);
+	}
+
+	private void tweenShowGameUi() {
 		this.timeline = Timeline.createSequence();
 
 		this.timeline.beginSequence()
@@ -308,7 +360,7 @@ public class Play extends State{
 				.end().start(this.tweenManager);
 	}
 
-	private void tweenShowPostGameUI() {
+	private void tweenShowPostGameUi() {
 		this.timeline = Timeline.createSequence();
 		this.timeline.beginSequence()
 				.push(Tween.set(this.gameOverMessage, ActorAccessor.ALPHA).target(0))
@@ -380,7 +432,7 @@ public class Play extends State{
 
 				buildEnvironment();
 
-				tweenShowScore();
+				tweenShowGameUi();
 
 				togglePostGameUiVisibility(false);
 
@@ -425,7 +477,7 @@ public class Play extends State{
 		this.table.getCell(this.highScoreLabel).width(this.glyphLayout.width * .25f).
 				height(this.glyphLayout.height * .25f).pad(50).colspan(2);
 
-		this.tweenShowPostGameUI();
+		this.tweenShowPostGameUi();
 
 		this.togglePostGameUiVisibility(true);
 

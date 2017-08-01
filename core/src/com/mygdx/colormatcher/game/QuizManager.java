@@ -15,7 +15,7 @@ public class QuizManager {
 	private int highScore;
 	private int timer;
 	private boolean gameEnded;
-
+	private boolean doTutorial;
 
 	private final int QUESTION_DURATION = 200;
 
@@ -42,7 +42,7 @@ public class QuizManager {
 
 			if(!this.gameEnded) this.onNextQuestion();
 
-			this.timer = QUESTION_DURATION;
+			this.timer = this.isDoTutorial() ? 10000 : this.QUESTION_DURATION;
 		}
 
 	}
@@ -54,6 +54,11 @@ public class QuizManager {
 	public void onAnswerSelect(AnswerBall answerBall){
 
 		if(this.isAnswerCorrect(answerBall)) {
+
+			if(this.doTutorial) {
+				this.timer = this.QUESTION_DURATION;
+				this.doTutorial = false;
+			}
 
 			this.onCorrectAnswer(answerBall);
 
@@ -223,7 +228,7 @@ public class QuizManager {
 	 */
 	public void onStart(){
 		this.timer = 50;
-		this.score = 100;
+		this.score = 0;
 		this.gameEnded = false;
 
 		this.random = new Random();
@@ -252,6 +257,10 @@ public class QuizManager {
 	}
 
 	/* Setters and getters */
+
+	public boolean isDoTutorial() {
+		return this.doTutorial;
+	}
 
 	public int getScore(){
 		return this.score;
