@@ -112,7 +112,7 @@ public abstract class Ball extends GameObject{
 	}
 
 	protected void updateCreationAnimation() {
-		if(this.radius == this.tempRadius) return;
+		if(this.radius >= this.tempRadius) return;
 
 		if(this.tempRadius == 0) {
 			this.tempRadius = this.radius;

@@ -235,10 +235,8 @@ public class Play extends State{
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_DST_ALPHA, GL20.GL_ZERO);
 
 		this.gameViewport.apply();
-
 		this.gameViewport.getCamera().position.set(this.WORLD_WIDTH / 2, this.WORLD_HEIGHT / 2, 0);
 		this.spriteBatch.setProjectionMatrix(this.gameViewport.getCamera().combined);
 
@@ -249,6 +247,8 @@ public class Play extends State{
 		}
 
 		this.referenceUnitViewport.apply();
+
+		Gdx.gl.glBlendFunc(GL20.GL_DST_ALPHA, GL20.GL_ZERO);
 
 		super.render(delta);
 

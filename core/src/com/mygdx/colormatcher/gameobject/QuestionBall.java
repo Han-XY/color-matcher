@@ -46,7 +46,8 @@ public class QuestionBall extends Ball{
 	@Override
 	public void update() {
 		super.update();
-		
+
+		this.updateCreationAnimation();
 		this.updateDeathAnimation();
 	}
 	
