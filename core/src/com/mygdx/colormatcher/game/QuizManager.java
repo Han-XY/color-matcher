@@ -13,15 +13,18 @@ public class QuizManager {
 
 	private int score;
 	private int highScore;
+
 	private int timer;
+
 	private boolean gameEnded;
-	private boolean doTutorial;
+
+	private boolean tutorialSkip;
 
 	private final int QUESTION_DURATION = 200;
 
 	/** The theme color for the game. */
 	private Color color;
-	private Color mainColor;
+	private Color targetColor;
 	private float segments;
 	private final float MAX_SEGMENTS = 100f;
 
@@ -34,6 +37,16 @@ public class QuizManager {
 	/** Stores all the questions so far. The correct answer is always the 0th element of the answer array. */
 	private transient Map<QuestionBall, ArrayList<AnswerBall>> problems;
 
+	public QuizManager(ColorMatcher colorMatcher, int highScore, boolean tutorialSkip) {
+		this.colorMatcher = colorMatcher;
+		this.highScore = highScore;
+		this.tutorialSkip = tutorialSkip;
+
+		this.problems = new HashMap<QuestionBall, ArrayList<AnswerBall>>();
+		this.color = new Color(1f, 1f, 1f, 1f);
+		this.targetColor = this.color;
+	}
+
 	public void update(){
 
 		this.timer --;
@@ -42,7 +55,7 @@ public class QuizManager {
 
 			if(!this.gameEnded) this.onNextQuestion();
 
-			this.timer = this.isDoTutorial() ? 10000 : this.QUESTION_DURATION;
+			this.timer = this.doTutorialSkip() ? this.QUESTION_DURATION : 10000;
 		}
 
 	}
@@ -55,9 +68,9 @@ public class QuizManager {
 
 		if(this.isAnswerCorrect(answerBall)) {
 
-			if(this.doTutorial) {
+			if(!this.tutorialSkip) {
 				this.timer = this.QUESTION_DURATION;
-				this.doTutorial = false;
+				this.tutorialSkip = true;
 			}
 
 			this.onCorrectAnswer(answerBall);
@@ -131,7 +144,7 @@ public class QuizManager {
 	 * Moves onto the next question, choosing the question color properties and queueing them to be added to the game.
 	 */
 	private void onNextQuestion(){
-		this.mainColor = this.color;
+		this.targetColor = this.color;
 
 		int spawns = this.random.nextInt(3) + 3;
 
@@ -214,16 +227,6 @@ public class QuizManager {
 	/* State management */
 
 	/**
-	 * Called when the quiz manager is loaded.
-	 */
-	public void onLoad(ColorMatcher colorMatcher) {
-		this.colorMatcher = colorMatcher;
-		this.problems = new HashMap<QuestionBall, ArrayList<AnswerBall>>();
-		this.color = new Color(1f, 1f, 1f, 1f);
-		this.mainColor = this.color;
-	}
-
-	/**
 	 * Called when the quiz starts.
 	 */
 	public void onStart(){
@@ -234,15 +237,15 @@ public class QuizManager {
 		this.random = new Random();
 
 		this.color = new Color(
-				.2f + random.nextFloat() * .8f,
+				.7f + random.nextFloat() * .8f,
 				.2f + random.nextFloat() * .8f,
 				.2f + random.nextFloat() * .8f,
 				1f
 		);
 
-		this.mainColor = this.color;
+		this.targetColor = this.color;
 
-		this.segments = 10;
+		this.segments = 8;
 	}
 
 	/**
@@ -258,8 +261,8 @@ public class QuizManager {
 
 	/* Setters and getters */
 
-	public boolean isDoTutorial() {
-		return this.doTutorial;
+	public boolean doTutorialSkip() {
+		return this.tutorialSkip;
 	}
 
 	public int getScore(){
@@ -270,7 +273,7 @@ public class QuizManager {
 		return this.highScore;
 	}
 
-	public Color getMainColor() {
-		return this.mainColor;
+	public Color getTargetColor() {
+		return this.targetColor;
 	}
 }

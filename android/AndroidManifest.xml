@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mygdx.colormatcher" >
 
-    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="26" />
+    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="23" />
 
     <application
         android:allowBackup="true"

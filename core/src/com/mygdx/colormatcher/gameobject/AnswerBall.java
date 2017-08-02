@@ -56,7 +56,7 @@ public class AnswerBall extends Ball{
 		this.fixtureDef.shape = shape;
 		this.fixtureDef.density = 2.5f;
 		this.fixtureDef.friction = .25f;
-		this.fixtureDef.restitution = .5f;
+		this.fixtureDef.restitution = .7f;
 
 		this.alpha = 1;
 

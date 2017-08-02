@@ -9,7 +9,9 @@
 		"default": { "font": white, "fontColor": white }
 	},
 	"com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle": {
-		"default": { "up": "button.up", "down": "button.down", "font": white, "pressedOffsetX": 1, "pressedOffsetY": -1 }
+		"default": { "up": "buttonStart.up", "down": "buttonStart.down", "font": white, "pressedOffsetX": 1, "pressedOffsetY": -1 }
+		"startButton": { "up": "buttonStart.up", "down": "buttonStart.down", "font": white, "pressedOffsetX": 1, "pressedOffsetY": -1 }
+		"exitButton": { "up": "buttonExit.up", "down": "buttonExit.down", "font": white, "pressedOffsetX": 1, "pressedOffsetY": -1 }
 	}
 
 }

@@ -7,8 +7,8 @@ import com.mygdx.colormatcher.game.ColorMatcher;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.width = 1052;
-		config.height = 1200;
+		config.width = 729;
+		config.height = 1296;
 		new LwjglApplication(new ColorMatcher(), config);
 	}
 }

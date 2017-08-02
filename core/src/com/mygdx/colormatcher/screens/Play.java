@@ -10,6 +10,7 @@ import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenManager;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -36,8 +37,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -73,6 +72,8 @@ public class Play extends State{
 	
 	private ArrayList<Ball> balls;
 
+	private final String PREFERENCES_FILE_NAME = "color_prefs";
+
 	private Table tutorialTable;
 	private Stage tutorialStage;
 
@@ -105,8 +106,8 @@ public class Play extends State{
 		this.spriteBatch = new SpriteBatch();
 		this.world = new World(new Vector2(0, -9.81f), true);
 
-		this.quizManager = new Json().fromJson(QuizManager.class, Gdx.files.internal("data/quiz.json"));
-		this.quizManager.onLoad(colorMatcher);
+		Preferences preferences = Gdx.app.getPreferences(this.PREFERENCES_FILE_NAME);
+		this.quizManager = new QuizManager(colorMatcher, preferences.getInteger("highScore"), preferences.getBoolean("skipTutorial"));
 
 		this.objectsToAdd = new LinkedList<GameObject>();
 		this.objectsToRemove = new LinkedList<GameObject>();
@@ -124,7 +125,7 @@ public class Play extends State{
 		this.tweenManager = new TweenManager();
 
 		this.stage = new Stage(this.referenceUnitViewport);
-		this.atlas = new TextureAtlas("ui/button.pack");
+		this.atlas = new TextureAtlas("ui/colorUi.pack");
 		this.skin = new Skin(Gdx.files.internal("ui/playSkin.json"), this.atlas);
 		this.table = new Table(this.skin);
 		this.table.setBounds(0, 0, this.stage.getWidth(), this.stage.getHeight());
@@ -132,7 +133,7 @@ public class Play extends State{
 		this.glyphLayout = new GlyphLayout();
 		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), Integer.toString(this.quizManager.getScore()));
 		this.labelScore = new Label(Integer.toString(this.quizManager.getScore()), this.skin);
-		this.labelScore.setColor(this.quizManager.getMainColor());
+		this.labelScore.setColor(this.quizManager.getTargetColor());
 
 		float scoreLabelScale = .8f;
 
@@ -195,7 +196,7 @@ public class Play extends State{
 
 		this.applyUiDelay();
 
-		if(this.quizManager.isDoTutorial()) this.setTutorial();
+		if(!this.quizManager.doTutorialSkip()) this.setTutorial();
 
 
 		this.stage.addActor(this.table);
@@ -244,7 +245,7 @@ public class Play extends State{
 	
 	@Override
 	public void render(float delta){
-		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClearColor(40 / 255f, 36 / 255f, 36 / 255f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -284,7 +285,7 @@ public class Play extends State{
 		this.labelScore.setText(Integer.toString(this.quizManager.getScore()));
 		this.table.getCell(this.labelScore).width(this.glyphLayout.width * .8f).height(this.glyphLayout.height * .8f);
 
-		Color gameColor = this.quizManager.getMainColor();
+		Color gameColor = this.quizManager.getTargetColor();
 		Color labelColor = labelScore.getColor();
 
 		float[] rgbGame = new float[]{gameColor.r, gameColor.g, gameColor.b};
@@ -306,11 +307,10 @@ public class Play extends State{
 		this.tutorialTable = new Table(this.skin);
 		this.tutorialStage = new Stage(this.referenceUnitViewport);
 
-		String message = "  click on the small\nball with the closest\ncolor to the big one";
+		String message = "    click on the small\n  ball with the closest\n  color to the big one";
 
-		this.glyphLayout.setText(this.colorMatcher.getFontWhite(), "click on the small circle");
 		this.tutorialMessage = new Label(message, this.skin);
-		this.tutorialMessage.setFontScale(.3f);
+		this.tutorialMessage.setFontScale(.28f);
 
 		this.tutorialTable.addActor(this.tutorialMessage);
 		this.tutorialStage.addActor(this.tutorialTable);
@@ -464,10 +464,10 @@ public class Play extends State{
 		int oldHighScore = this.quizManager.getHighScore();
 		this.quizManager.onEnd();
 
-		Json json = new Json();
-		json.setOutputType(JsonWriter.OutputType.json);
-		String jsonString = json.prettyPrint(this.quizManager);
-		Gdx.files.local("data/quiz.json").writeString(jsonString, false);
+		Preferences preferences = Gdx.app.getPreferences(PREFERENCES_FILE_NAME);
+		preferences.putInteger("highScore", this.quizManager.getHighScore());
+		preferences.putBoolean("skipTutorial", this.quizManager.doTutorialSkip());
+		preferences.flush();
 
 		String highScoreMessage =  this.quizManager.getHighScore() > oldHighScore ? "new highscore - " +
 				this.quizManager.getHighScore() : "highscore - " + quizManager.getHighScore();

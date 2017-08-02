@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.colormatcher.game.ColorMatcher;
 import com.mygdx.colormatcher.game.GameStateManager;
 import com.mygdx.colormatcher.tween.ActorAccessor;
@@ -34,21 +35,21 @@ public class Menu extends State{
 
 	@Override
 	public void show(){
-		FitViewport viewport = new FitViewport(ColorMatcher.REF_WIDTH, ColorMatcher.REF_HEIGHT);
+		FitViewport viewport = new FitViewport(ColorMatcher.REF_WIDTH * 2, ColorMatcher.REF_HEIGHT * 2);
 		this.stage = new Stage(viewport);
 
-		this.atlas = new TextureAtlas("ui/button.pack");
+		this.atlas = new TextureAtlas("ui/colorUi.pack");
 		this.skin = new Skin(Gdx.files.internal("ui/menuSkin.json"), atlas);
 		this.table = new Table(skin);
-		this.table.setBounds(0, 0, ColorMatcher.REF_WIDTH, ColorMatcher.REF_HEIGHT);
+		this.table.setBounds(0, 0, ColorMatcher.REF_WIDTH * 2, ColorMatcher.REF_HEIGHT * 2);
 
 		this.heading = new Label("Color!", skin);
-		this.heading.setFontScale(.8f);
+		this.heading.setFontScale(1.6f);
 
-		this.buttonPlay = new TextButton("start", skin);
-		this.buttonPlay.getLabel().setFontScale(.3f);
-		this.buttonExit = new TextButton("exit", skin);
-		this.buttonExit.getLabel().setFontScale(.3f);
+		this.buttonPlay = new TextButton("start", skin, "startButton");
+		this.buttonPlay.getLabel().setFontScale(.6f);
+		this.buttonExit = new TextButton("exit", skin, "exitButton");
+		this.buttonExit.getLabel().setFontScale(.6f);
 
 		this.buttonPlay.setTouchable(Touchable.disabled);
 		this.buttonExit.setTouchable(Touchable.disabled);
@@ -87,11 +88,11 @@ public class Menu extends State{
 				}
 		);
 
-		this.table.add(this.heading).width(400f).height(200f).pad(50f);
+		this.table.add(this.heading).width(800f).height(400f).pad(100f);
 		this.table.row();
-		this.table.add(this.buttonPlay).width(290f).height(140f).pad(20f);
+		this.table.add(this.buttonPlay).width(500f).height(260f).pad(40f);
 		this.table.row();
-		this.table.add(this.buttonExit).width(290f).height(140f).pad(20f);
+		this.table.add(this.buttonExit).width(500f).height(260f).pad(40f);
 
 		this.RGBList = new int[]{255, 0, 0};
 
@@ -139,7 +140,7 @@ public class Menu extends State{
 	
 	@Override
 	public void render(float delta){
-		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClearColor(40 / 255f, 36 / 255f, 36 / 255f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		super.render(delta);
