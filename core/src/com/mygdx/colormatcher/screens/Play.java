@@ -452,9 +452,8 @@ public class Play extends State{
 
 		this.world.getBodies(bodies);
 
-		for(Body body : bodies){
-			if(this.wallFixtures.get(0).getBody() == body)
-				this.world.destroyBody(body);
+		for(Fixture wallFixture : wallFixtures) {
+			this.world.destroyBody(wallFixture.getBody());
 		}
 
 		this.wallFixtures.clear();
